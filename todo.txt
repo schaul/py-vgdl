@@ -1,0 +1,15 @@
+Game dynamics:
+- non-grid physics
+- resource-type objects (health, heat, ...)
+- chasing NPCs
+
+Example games:
+- pacman
+- lunar lander
+- super mario
+- asteroids
+
+Other:
+- nicer graphics
+- interface to artificial agents
+- full score system
