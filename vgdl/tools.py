@@ -5,6 +5,22 @@ Video game description language -- utility functions.
 '''
 
 
+def triPoints(rect, direction):
+    """ Returns the pointlist for a triangle 
+    in the middle of the provided rect, pointing in the direction (given as angle from upwards,
+    or direction vector) """    
+    p1 = (rect.center[0]+direction[0]*rect.size[0]/2.,
+          rect.center[1]+direction[1]*rect.size[1]/2.)
+    p2 = (rect.center[0]-direction[0]*rect.size[0]/4.,
+          rect.center[1]-direction[1]*rect.size[1]/4.)
+    orthdir = (direction[1], -direction[0])
+    p2a = (p2[0]-orthdir[0]*rect.size[0]/6.,
+           p2[1]-orthdir[1]*rect.size[1]/6.)
+    p2b = (p2[0]+orthdir[0]*rect.size[0]/6.,
+           p2[1]+orthdir[1]*rect.size[1]/6.)    
+    return [(p[0], p[1]) for p in [p1, p2a, p2b]]
+
+
 class Node(object):
     """ Lightweight indented tree structure, with automatic insertion at the right spot. """
     
