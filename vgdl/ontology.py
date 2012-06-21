@@ -5,6 +5,9 @@ Video game description language -- ontology of concepts.
 '''
 
 from random import choice, random
+from math import sqrt
+import pygame
+from tools import triPoints
 
 # ---------------------------------------------------------------------
 #     Constants
@@ -36,6 +39,13 @@ class GridPhysics():
     def _scaleDir(self, d):
         return (d[0]*self.gridsize[0], d[1]*self.gridsize[1])
         
+    def _unitDir(self, v):
+        l = sqrt(float(v[0])**2+v[1]**2)
+        if l > 0:
+            return (v[0]/l, v[1]/l)
+        else:
+            return None
+        
     def keyDirection(self, keystate):        
         from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
         if keystate[K_RIGHT]:   return self._scaleDir(RIGHT)
@@ -63,6 +73,19 @@ class Passive(VGDLSprite):
     """ A square that may budge. """
     color = RED    
     
+class Flicker(VGDLSprite):
+    """ A square that persists just a few timesteps. """
+    color = RED    
+    def __init__(self, limit=1, **kwargs):
+        self.limit = limit
+        self.age = 0
+        VGDLSprite.__init__(self, **kwargs)    
+        
+    def update(self, game):
+        if self.age >= self.limit:
+            killSprite(self, None, game)
+        self.age += 1
+        
 class Portal(Immovable):
     def __init__(self, stype=None, **kwargs):
         self.stype = stype
@@ -91,15 +114,44 @@ class FlakAvatar(VGDLSprite):
     """ Only horizontal moves. Hitting the space button creates a sprite of the 
     specified type at its location. """
     color=GREEN        
-    def __init__(self, shoot=None, **kwargs):
-        self.shoot = shoot
+    def __init__(self, stype=None, **kwargs):
+        self.stype = stype
         VGDLSprite.__init__(self, **kwargs)
     
     def update(self, game):
-        from pygame.locals import K_SPACE
         self._updatePos((self.physics.keyDirection(game.keystate)[0], 0))
-        if self.shoot and game.keystate[K_SPACE]:
-            game._createSprite([self.shoot], (self.rect.left, self.rect.top))
+        from pygame.locals import K_SPACE
+        if self.stype and game.keystate[K_SPACE]:
+            game._createSprite([self.stype], (self.rect.left, self.rect.top))
+            
+class OrientedAvatar(MovingAvatar):
+    """ An avatar that maintains the current orientation. """    
+    def __init__(self, *args, **kwargs):
+        MovingAvatar.__init__(self, *args, **kwargs)
+        self.orientation = LEFT
+        
+    def update(self, game):
+        MovingAvatar.update(self, game)
+        d = self.physics._unitDir(self.lastdirection)
+        if d is not None:  
+            self.orientation = d    
+            
+    def _draw(self, screen):
+        #print 'here', triPoints(self.rect, self.orientation)
+        MovingAvatar._draw(self, screen)                
+        pygame.draw.polygon(screen, BLUE, triPoints(self.rect, self.orientation))
+    
+class LinkAvatar(OrientedAvatar):
+    def __init__(self, stype=None, **kwargs):
+        self.stype = stype
+        OrientedAvatar.__init__(self, **kwargs)
+    
+    def update(self, game):
+        OrientedAvatar.update(self, game)
+        from pygame.locals import K_SPACE
+        if self.stype and game.keystate[K_SPACE]:
+            game._createSprite([self.stype], (self.rect.left+self.orientation[0]*self.rect.size[0],
+                                               self.rect.top+self.orientation[1]*self.rect.size[1]))    
         
 class Missile(VGDLSprite):
     """ A sprite that constantly moves in the same direction. """    
@@ -175,7 +227,7 @@ class SpriteCounter(Termination):
         self.win = win
     
     def isDone(self, game):
-        if len(game.sprite_groups[self.stype]) == self.limit:
+        if game.numSprites(self.stype) == self.limit:
             return True, self.win
         else:
             return False, None
@@ -188,7 +240,7 @@ class MultiSpriteCounter(Termination):
         self.stypes = kwargs.values()
         
     def isDone(self, game):
-        if sum([len(game.sprite_groups[st]) for st in self.stypes])== self.limit:
+        if sum([game.numSprites(st) for st in self.stypes])== self.limit:
             return True, self.win
         else:
             return False, None
@@ -203,6 +255,11 @@ def killSprite(sprite, partner, game):
     
 def cloneSprite(sprite, partner, game):
     game._createSprite([sprite.name], (sprite.rect.left, sprite.rect.top))
+    
+def transformTo(sprite, partner, game, stype=None):
+    if stype:
+        game._createSprite([stype], (sprite.rect.left, sprite.rect.top))
+    killSprite(sprite, partner, game)
     
 def stepBack(sprite, partner, game):
     """ Revert last move. """

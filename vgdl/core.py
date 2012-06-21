@@ -10,8 +10,7 @@ from tools import Node, indentTreeParser
 
 
 class VGDLParser(object):
-    """ Parses a string into a Game object. """
-    
+    """ Parses a string into a Game object. """    
     verbose = False
     
     @staticmethod     
@@ -49,8 +48,9 @@ class VGDLParser(object):
         for inode in inodes:
             if ">" in inode.content:
                 pair, edef = [x.strip() for x in inode.content.split(">")]
+                eclass, args = self._parseArgs(edef)
                 self.game.collision_eff.append(tuple([x.strip() for x in pair.split(" ") if len(x)>0]
-                                                     +[self._eval(edef)]))
+                                                     +[eclass, args]))
                 if self.verbose:            
                     print "Collision", pair, "has effect:", edef              
                 
@@ -177,6 +177,13 @@ class BasicGame(object):
         for key in self.sprite_order:
             for s in self.sprite_groups[key]:
                 yield s
+                
+    def numSprites(self, key):
+        """ Abstract sprite groups are computed on demand only """
+        if key in self.sprite_groups:
+            return len(self.sprite_groups[key])
+        else: 
+            return len([s for s in self if key in s.stypes])
         
     def _clearAll(self):
         for s in set(self.kill_list):
@@ -237,10 +244,10 @@ class BasicGame(object):
                 s.update(self)                
             # handle collision effects
             self._updateCollisionDict()
-            for g1, g2, effect in self.collision_eff:
+            for g1, g2, effect, args in self.collision_eff:
                 if (g1, g2) in self.lastcollisions:
                     for s1, s2 in set(self.lastcollisions[(g1, g2)]):
-                        effect(s1, s2, self)
+                        effect(s1, s2, self, **args)
             self._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
             VGDLSprite.dirtyrects = []

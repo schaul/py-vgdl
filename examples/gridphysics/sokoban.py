@@ -1,5 +1,5 @@
 '''
-VGDL example: a simplified Sokoban variant: push the boxes into the holes
+VGDL example: a simplified Sokoban variant: push the boxes into the holes.
 
 @author: Tom Schaul
 '''
@@ -24,26 +24,21 @@ BasicGame frame_rate=30
         hole   > Immovable color=GREEN
         movable >
             avatar > MovingAvatar cooldown=10
-            box    > Passive        
-        
+            box    > Passive                
     LevelMapping
         w > wall
         0 > hole
         1 > avatar
-        2 > box
-            
+        2 > box            
     InteractionSet
         avatar wall > stepBack        
         box avatar  > bounceForward
         box wall    > undoAll        
         box box     > undoAll
-        movable hole> killSprite
-        
+        movable hole> killSprite        
     TerminationSet
-        Timeout       limit=10000
-        SpriteCounter stype=box limit=0 win=True
-        SpriteCounter stype=avatar limit=0 win=False
-              
+        SpriteCounter stype=box    limit=0 win=True
+        SpriteCounter stype=avatar limit=0 win=False              
 """
 
 if __name__ == "__main__":
