@@ -26,6 +26,7 @@ DOWN   = (0,  1)
 LEFT   = (-1, 0)
 RIGHT  = ( 1, 0)
 
+BASEDIRS = [UP, RIGHT, DOWN, LEFT]
 
 # ---------------------------------------------------------------------
 #     Types of physics
@@ -56,7 +57,7 @@ class GridPhysics():
                 
     def allDirections(self):
         """ Returns the 4 direction vectors. """
-        return [self._scaleDir(UP), self._scaleDir(RIGHT), self._scaleDir(DOWN), self._scaleDir(LEFT)]
+        return [self._scaleDir(d) for d in BASEDIRS]
 
 
 # ---------------------------------------------------------------------
@@ -82,15 +83,20 @@ class Flicker(VGDLSprite):
         VGDLSprite.__init__(self, **kwargs)    
         
     def update(self, game):
-        if self.age >= self.limit:
+        if self.age > self.limit:
             killSprite(self, None, game)
         self.age += 1
         
-class Portal(Immovable):
+class SpriteProducer(VGDLSprite):
+    """ Superclass for all sprites that may produce other sprites, of type 'stype'. """    
     def __init__(self, stype=None, **kwargs):
         self.stype = stype
         VGDLSprite.__init__(self, **kwargs)    
-
+    
+class Portal(SpriteProducer):
+    is_static = True
+    color = BLUE
+    
 class RandomNPC(VGDLSprite):
     """ Chooses randomly from all available actions each step. """    
     def update(self, game):
@@ -110,13 +116,10 @@ class Frog(MovingAvatar):
         MovingAvatar.update(self, game)
         self.drowning_safe = False
         
-class FlakAvatar(VGDLSprite):
+class FlakAvatar(SpriteProducer):
     """ Only horizontal moves. Hitting the space button creates a sprite of the 
     specified type at its location. """
     color=GREEN        
-    def __init__(self, stype=None, **kwargs):
-        self.stype = stype
-        VGDLSprite.__init__(self, **kwargs)
     
     def update(self, game):
         self._updatePos((self.physics.keyDirection(game.keystate)[0], 0))
@@ -124,28 +127,38 @@ class FlakAvatar(VGDLSprite):
         if self.stype and game.keystate[K_SPACE]:
             game._createSprite([self.stype], (self.rect.left, self.rect.top))
             
-class OrientedAvatar(MovingAvatar):
-    """ An avatar that maintains the current orientation. """    
-    def __init__(self, *args, **kwargs):
-        MovingAvatar.__init__(self, *args, **kwargs)
-        self.orientation = LEFT
-        
+class OrientedSprite(VGDLSprite):
+    """ A sprite that maintains the current orientation. """    
+    draw_arrow = False
+    
+    def __init__(self, direction=None, draw_arrow=None, **kwargs):
+        MovingAvatar.__init__(self, **kwargs)
+        if direction:   
+            self.orientation=direction
+        else:
+            self.orientation=RIGHT
+        if draw_arrow is not None:
+            self.draw_arrow = draw_arrow        
+    
+    def _draw(self, screen):
+        """ With a triangle that shows the orientation. """
+        MovingAvatar._draw(self, screen)
+        if self.draw_arrow:                
+            col = (self.color[0], 255-self.color[1], self.color[2])
+            pygame.draw.polygon(screen, col, triPoints(self.rect, self.orientation))
+            
+class OrientedAvatar(OrientedSprite, MovingAvatar):
+    draw_arrow = True
+    
     def update(self, game):
         MovingAvatar.update(self, game)
         d = self.physics._unitDir(self.lastdirection)
         if d is not None:  
-            self.orientation = d    
-            
-    def _draw(self, screen):
-        #print 'here', triPoints(self.rect, self.orientation)
-        MovingAvatar._draw(self, screen)                
-        pygame.draw.polygon(screen, BLUE, triPoints(self.rect, self.orientation))
+            # only update if the sprite moved.
+            self.orientation = d            
     
-class LinkAvatar(OrientedAvatar):
-    def __init__(self, stype=None, **kwargs):
-        self.stype = stype
-        OrientedAvatar.__init__(self, **kwargs)
-    
+class LinkAvatar(OrientedAvatar, SpriteProducer):
+    """ Link can use his sword in front of him. """
     def update(self, game):
         OrientedAvatar.update(self, game)
         from pygame.locals import K_SPACE
@@ -153,32 +166,36 @@ class LinkAvatar(OrientedAvatar):
             game._createSprite([self.stype], (self.rect.left+self.orientation[0]*self.rect.size[0],
                                                self.rect.top+self.orientation[1]*self.rect.size[1]))    
         
-class Missile(VGDLSprite):
-    """ A sprite that constantly moves in the same direction. """    
-    def __init__(self, direction=None, **kwargs):
-        VGDLSprite.__init__(self, **kwargs)
-        if direction:   
-            self.direction=direction
-        else:
-            self.direction=RIGHT
-        
+class Missile(OrientedSprite):
+    """ A sprite that constantly moves in the same direction. """            
     def update(self, game):
         self._updatePos(self.physics._scaleDir(self.direction))
         
 class RandomMissile(Missile):
     def __init__(self, **kwargs):
-        Missile.__init__(self, direction=choice([UP, DOWN, LEFT, RIGHT]),
+        Missile.__init__(self, direction=choice(BASEDIRS),
                          speedup = choice([0.1, 0.2, 0.4]), **kwargs)
         
-class SpawnPoint(Immovable):
+class ErraticMissile(Missile):
+    """ A missile that randomly changes direction from time to time.
+    (with probability 'prob' per timestep. """
+    def __init__(self, prob=0.1, **kwargs):
+        Missile.__init__(self, direction=choice(BASEDIRS), **kwargs)
+        self.prob=prob
+    
+    def update(self, game):
+        Missile.update(self, game)
+        if random() < self.prob:
+            self.orientation = choice(BASEDIRS)
+        
+class SpawnPoint(SpriteProducer):
     prob  = None
     delay = None
     total = None
     color = BLACK
     
-    def __init__(self, stype=None, delay=1, prob=1, total=None, **kwargs):
-        VGDLSprite.__init__(self, **kwargs)
-        self.stype = stype
+    def __init__(self, delay=1, prob=1, total=None, **kwargs):
+        SpriteProducer.__init__(self, **kwargs)
         if prob:
             self.prob  = prob
         if delay:
