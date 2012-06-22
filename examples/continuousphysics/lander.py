@@ -4,16 +4,15 @@ VGDL example: a lunar lander variant.
 @author: Tom Schaul
 '''
 
-
 lander_game = """
 BasicGame
-    SpriteSet    
+    SpriteSet 
         wall   > Immovable
-        pad    > Immovable color=BLUE 
-        avatar > LanderAvatar
+        pad    > Passive color=BLUE 
+        avatar > InertialAvatar physicstype=GravityPhysics
             
     TerminationSet
-        SpriteCounter stype=pad limit=1 win=True     
+        SpriteCounter stype=pad limit=4 win=True     
         SpriteCounter stype=avatar      win=False     
            
     InteractionSet
@@ -34,15 +33,14 @@ w                          w
 w                          w
 w                          w
 w                          w
-w                     wwwwww
-w                    ww    w
-w                     w    w
-w            22wwww   w    w
-w          wwwwwwwwwww     w
+w                     www  w
+w                    wwww  w
+w       w        wwwwwwww22w
+w      wwwww222wwwwwwwwwwwww
+w    wwwwwwwwwwwwwwwwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 
 if __name__ == "__main__":
     from core import VGDLParser
-    #VGDLParser.playGame(lander_game, lander_level)
-    #TODO    
+    VGDLParser.playGame(lander_game, lander_level)
