@@ -19,7 +19,7 @@ BasicGame
         SpriteCounter stype=avatar win=False     
            
     InteractionSet
-        inertial wall > bounceDirection 
+        inertial wall > wallBounce 
         avatar bullet > killSprite
         pad avatar    > killSprite
         

@@ -73,6 +73,9 @@ class ContinuousPhysics(GridPhysics):
         sprite.orientation = unitVector((v1, v2))        
         sprite.speed = vectNorm((v1, v2))/vectNorm(sprite.orientation)
         
+class GravityPhysics(ContinuousPhysics):
+    gravity = 0.5
+
         
 # ---------------------------------------------------------------------
 #     Sprite types
@@ -271,8 +274,7 @@ class InertialAvatar(OrientedAvatar):
     physicstype=ContinuousPhysics
     def update(self, game):
         MovingAvatar.update(self, game)
-        
-                
+                    
         
 # ---------------------------------------------------------------------
 #     Termination criteria
@@ -290,14 +292,14 @@ class Timeout(Termination):
             return False, None
     
 class SpriteCounter(Termination):
-    """ Game ends when the number of sprites of type 'stype' hits 'limit'. """
+    """ Game ends when the number of sprites of type 'stype' hits 'limit' (or below). """
     def __init__(self, limit=0, stype=None, win=True):
         self.limit = limit
         self.stype = stype
         self.win = win
     
     def isDone(self, game):
-        if game.numSprites(self.stype) == self.limit:
+        if game.numSprites(self.stype) <= self.limit:
             return True, self.win
         else:
             return False, None
@@ -357,7 +359,7 @@ def turnAround(sprite, partner, game):
 def reverseDirection(sprite, partner, game):
     sprite.orientation = (-sprite.orientation[0], -sprite.orientation[1])
     
-def bounceDirection(sprite, partner, game, friction=1):
+def bounceDirection(sprite, partner, game, friction=0):
     """ The centers of the objects determine the direction"""
     # TODO: not yet correct
     stepBack(sprite, partner, game)
@@ -365,8 +367,35 @@ def bounceDirection(sprite, partner, game, friction=1):
     snorm = unitVector((-sprite.rect.centerx+partner.rect.centerx, 
                         -sprite.rect.centery+partner.rect.centery))
     dp = snorm[0]*inc[0]+snorm[1]*inc[1]
-    sprite.orientation = ((2*dp*snorm[0] - inc[0])*friction, (2*dp*snorm[1] - inc[1])*friction)   
+    sprite.orientation = (2*dp*snorm[0] - inc[0], 2*dp*snorm[1] - inc[1])   
+    sprite.speed *= (1.-friction)
+    
+def wallBounce(sprite, partner, game, friction=0):
+    """ Bounce off orthogonally to the wall. """
+    if hasattr(sprite, 'lastbounce'):
+        # bounce only once per timestep, even if there are multiple collisions
+        if sprite.lastbounce == game.time:
+            return
+    sprite.lastbounce = game.time
+    sprite.speed *= (1.-friction)
+    stepBack(sprite, partner, game)
+    if abs(sprite.rect.centerx-partner.rect.centerx) > abs(sprite.rect.centery-partner.rect.centery):
+        sprite.orientation = (-sprite.orientation[0], sprite.orientation[1])
+    else:
+        sprite.orientation = (sprite.orientation[0], -sprite.orientation[1])    
         
+def killIfSlow(sprite, partner, game, limitspeed=1):
+    """ Take a decision based on relative speed. """
+    if sprite.is_static:
+        relspeed = partner.speed
+    elif partner.is_static:
+        relspeed = sprite.speed
+    else:
+        relspeed = vectNorm((sprite._velocity()[0]-partner._velocity()[0], 
+                             sprite._velocity()[1]-partner._velocity()[1]))
+    if relspeed < limitspeed:
+        killSprite(sprite, partner, game)
+
 def drownSprite(sprite, partner, game):
     if not sprite.drowning_safe:
         killSprite(sprite, partner, game)

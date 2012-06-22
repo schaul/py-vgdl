@@ -306,6 +306,13 @@ class VGDLSprite(object):
         if not(self.cooldown > self.lastmove or abs(orientation[0])+abs(orientation[1])==0):
             self.rect = self.rect.move((orientation[0]*speed, orientation[1]*speed))
             self.lastmove = 0
+            
+    def _velocity(self):
+        """ Current velocity vector. """
+        if self.speed is None or self.speed==0 or not hasattr(self, 'orientation'):
+            return (0,0)
+        else:
+            return (self.orientation[0]*self.speed, self.orientation[1]*self.speed)
     
     @property
     def lastdirection(self):
