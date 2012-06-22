@@ -22,14 +22,14 @@ bullet_game = """
 BasicGame
     SpriteSet
         bullet > Missile
-            slowbullet > speedup=0.1 color=ORANGE
-                upslow    >     direction=UP    
-                downslow  >     direction=DOWN  
-                leftslow  >     direction=LEFT  
-                rightslow >     direction=RIGHT
-            fastbullet > speedup=0.2  color=RED
-                rightfast >     direction=RIGHT
-                downfast  >     direction=DOWN  
+            slowbullet > speed=0.1 color=ORANGE
+                upslow    >     orientation=UP    
+                downslow  >     orientation=DOWN  
+                leftslow  >     orientation=LEFT  
+                rightslow >     orientation=RIGHT
+            fastbullet > speed=0.2  color=RED
+                rightfast >     orientation=RIGHT
+                downfast  >     orientation=DOWN  
         wall      > Immovable
         goal      > Immovable  color=GREEN
         avatar    > MovingAvatar

@@ -28,7 +28,7 @@ BasicGame
             avatar  > LinkAvatar   stype=sword 
                 withoutkey >
                 withkey    > color=ORANGE
-            monster > RandomNPC    color=BROWN speedup=0.5
+            monster > RandomNPC    color=BROWN cooldown=2 speed=0.5
     LevelMapping
         w > wall
         0 > goal

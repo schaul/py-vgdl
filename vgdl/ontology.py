@@ -5,9 +5,8 @@ Video game description language -- ontology of concepts.
 '''
 
 from random import choice, random
-from math import sqrt
 import pygame
-from tools import triPoints
+from tools import triPoints, unitVector, vectNorm
 
 # ---------------------------------------------------------------------
 #     Constants
@@ -35,31 +34,46 @@ class GridPhysics():
     """ Define actions and key-mappings for grid-world dynamics. """
     
     def __init__(self, gridsize=(10,10)):
-        self.gridsize = gridsize
-        
-    def _scaleDir(self, d):
-        return (d[0]*self.gridsize[0], d[1]*self.gridsize[1])
-        
-    def _unitDir(self, v):
-        l = sqrt(float(v[0])**2+v[1]**2)
-        if l > 0:
-            return (v[0]/l, v[1]/l)
-        else:
-            return None
-        
-    def keyDirection(self, keystate):        
-        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
-        if keystate[K_RIGHT]:   return self._scaleDir(RIGHT)
-        elif keystate[K_LEFT]:  return self._scaleDir(LEFT)
-        elif keystate[K_UP]:    return self._scaleDir(UP)
-        elif keystate[K_DOWN]:  return self._scaleDir(DOWN)
-        else:                   return (0,0)
+        self.gridsize = gridsize        
                 
-    def allDirections(self):
-        """ Returns the 4 direction vectors. """
-        return [self._scaleDir(d) for d in BASEDIRS]
-
-
+    def passiveMovement(self, sprite):
+        if sprite.speed is None:
+            speed=1
+        else:
+            speed=sprite.speed        
+        if speed > 0 and hasattr(sprite, 'orientation'):
+            sprite._updatePos(sprite.orientation, speed*self.gridsize[0])   
+    
+    def activeMovement(self, sprite, action):
+        if sprite.speed is None:
+            speed=1
+        else:
+            speed=sprite.speed
+        if speed >0 and action is not None:
+            sprite._updatePos(action, speed*self.gridsize[0])
+    
+class ContinuousPhysics(GridPhysics):
+    gravity = 0.
+    friction = 0.02
+    
+    def __init__(self, gridsize=None):
+        self.gridsize = (1,1)    
+    
+    def passiveMovement(self, sprite):
+        GridPhysics.passiveMovement(self, sprite) 
+        if self.gravity > 0 and sprite.mass >0:
+            self.activeMovement(sprite, (0, self.gravity*sprite.mass))        
+        sprite.speed *= (1-self.friction)
+            
+    def activeMovement(self, sprite, action):
+        """ Here the assumption is that the controls determine the direction of
+        acceleration of the sprite. """
+        v1 = action[0]/float(sprite.mass) + sprite.orientation[0]*sprite.speed
+        v2 = action[1]/float(sprite.mass) + sprite.orientation[1]*sprite.speed
+        sprite.orientation = unitVector((v1, v2))        
+        sprite.speed = vectNorm((v1, v2))/vectNorm(sprite.orientation)
+        
+        
 # ---------------------------------------------------------------------
 #     Sprite types
 # ---------------------------------------------------------------------
@@ -83,6 +97,7 @@ class Flicker(VGDLSprite):
         VGDLSprite.__init__(self, **kwargs)    
         
     def update(self, game):
+        VGDLSprite.update(self, game)
         if self.age > self.limit:
             killSprite(self, None, game)
         self.age += 1
@@ -96,103 +111,13 @@ class SpriteProducer(VGDLSprite):
 class Portal(SpriteProducer):
     is_static = True
     color = BLUE
-    
-class RandomNPC(VGDLSprite):
-    """ Chooses randomly from all available actions each step. """    
-    def update(self, game):
-        self._updatePos(choice(self.physics.allDirections()))
-        
-class MovingAvatar(VGDLSprite):
-    color=WHITE    
-    
-    def update(self, game):
-        self._updatePos(self.physics.keyDirection(game.keystate))
-        
-class Frog(MovingAvatar):
-    """ Has an additional flag that keeps if from drowning if true. """
-    drowning_safe = False
-    
-    def update(self, game):
-        MovingAvatar.update(self, game)
-        self.drowning_safe = False
-        
-class FlakAvatar(SpriteProducer):
-    """ Only horizontal moves. Hitting the space button creates a sprite of the 
-    specified type at its location. """
-    color=GREEN        
-    
-    def update(self, game):
-        self._updatePos((self.physics.keyDirection(game.keystate)[0], 0))
-        from pygame.locals import K_SPACE
-        if self.stype and game.keystate[K_SPACE]:
-            game._createSprite([self.stype], (self.rect.left, self.rect.top))
-            
-class OrientedSprite(VGDLSprite):
-    """ A sprite that maintains the current orientation. """    
-    draw_arrow = False
-    
-    def __init__(self, direction=None, draw_arrow=None, **kwargs):
-        MovingAvatar.__init__(self, **kwargs)
-        if direction:   
-            self.orientation=direction
-        else:
-            self.orientation=RIGHT
-        if draw_arrow is not None:
-            self.draw_arrow = draw_arrow        
-    
-    def _draw(self, screen):
-        """ With a triangle that shows the orientation. """
-        MovingAvatar._draw(self, screen)
-        if self.draw_arrow:                
-            col = (self.color[0], 255-self.color[1], self.color[2])
-            pygame.draw.polygon(screen, col, triPoints(self.rect, self.orientation))
-            
-class OrientedAvatar(OrientedSprite, MovingAvatar):
-    draw_arrow = True
-    
-    def update(self, game):
-        MovingAvatar.update(self, game)
-        d = self.physics._unitDir(self.lastdirection)
-        if d is not None:  
-            # only update if the sprite moved.
-            self.orientation = d            
-    
-class LinkAvatar(OrientedAvatar, SpriteProducer):
-    """ Link can use his sword in front of him. """
-    def update(self, game):
-        OrientedAvatar.update(self, game)
-        from pygame.locals import K_SPACE
-        if self.stype and game.keystate[K_SPACE]:
-            game._createSprite([self.stype], (self.rect.left+self.orientation[0]*self.rect.size[0],
-                                               self.rect.top+self.orientation[1]*self.rect.size[1]))    
-        
-class Missile(OrientedSprite):
-    """ A sprite that constantly moves in the same direction. """            
-    def update(self, game):
-        self._updatePos(self.physics._scaleDir(self.direction))
-        
-class RandomMissile(Missile):
-    def __init__(self, **kwargs):
-        Missile.__init__(self, direction=choice(BASEDIRS),
-                         speedup = choice([0.1, 0.2, 0.4]), **kwargs)
-        
-class ErraticMissile(Missile):
-    """ A missile that randomly changes direction from time to time.
-    (with probability 'prob' per timestep. """
-    def __init__(self, prob=0.1, **kwargs):
-        Missile.__init__(self, direction=choice(BASEDIRS), **kwargs)
-        self.prob=prob
-    
-    def update(self, game):
-        Missile.update(self, game)
-        if random() < self.prob:
-            self.orientation = choice(BASEDIRS)
-        
+
 class SpawnPoint(SpriteProducer):
     prob  = None
     delay = None
     total = None
     color = BLACK
+    is_static = True
     
     def __init__(self, delay=1, prob=1, total=None, **kwargs):
         SpriteProducer.__init__(self, **kwargs)
@@ -212,14 +137,142 @@ class SpawnPoint(SpriteProducer):
         if self.total and self.counter >= self.total:
             killSprite(self, None, game) 
 
+class RandomNPC(VGDLSprite):
+    """ Chooses randomly from all available actions each step. """    
+    speed=1
+    def update(self, game):
+        VGDLSprite.update(self, game)
+        self.physics.activeMovement(self, choice(BASEDIRS))    
+                    
+class OrientedSprite(VGDLSprite):
+    """ A sprite that maintains the current orientation. """    
+    draw_arrow  = False
+    orientation = RIGHT    
+    def __init__(self, orientation=None, draw_arrow=None, **kwargs):
+        VGDLSprite.__init__(self, **kwargs)
+        if orientation:   
+            self.orientation=orientation
+        if draw_arrow is not None:
+            self.draw_arrow = draw_arrow        
+    
+    def _draw(self, screen):
+        """ With a triangle that shows the orientation. """
+        VGDLSprite._draw(self, screen)
+        if self.draw_arrow:
+            col = (self.color[0], 255-self.color[1], self.color[2])
+            pygame.draw.polygon(screen, col, triPoints(self.rect, unitVector(self.orientation)))
+            
+class Missile(OrientedSprite):
+    """ A sprite that constantly moves in the same direction. """            
+    speed = 1 
+
+class RandomInertial(OrientedSprite, RandomNPC):
+    physicstype=ContinuousPhysics    
+        
+class RandomMissile(Missile):
+    def __init__(self, **kwargs):
+        Missile.__init__(self, orientation=choice(BASEDIRS),
+                         speed = choice([0.1, 0.2, 0.4]), **kwargs)
+        
+class ErraticMissile(Missile):
+    """ A missile that randomly changes direction from time to time.
+    (with probability 'prob' per timestep). """
+    def __init__(self, prob=0.1, **kwargs):
+        Missile.__init__(self, orientation=choice(BASEDIRS), **kwargs)
+        self.prob=prob
+    
+    def update(self, game):
+        Missile.update(self, game)
+        if random() < self.prob:
+            self.orientation = choice(BASEDIRS)
+
 class Bomber(SpawnPoint, Missile):
-    direction = RIGHT
     color     = ORANGE
     is_static = False
     def update(self, game):
         Missile.update(self, game)
         SpawnPoint.update(self, game)
+
+
+# ---------------------------------------------------------------------
+#     Avatars: player-controlled sprite types
+# ---------------------------------------------------------------------
+class MovingAvatar(VGDLSprite):
+    color=WHITE    
+    speed=1    
+    def _readAction(self, game):        
+        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
+        if   game.keystate[K_RIGHT]: return RIGHT
+        elif game.keystate[K_LEFT]:  return LEFT
+        elif game.keystate[K_UP]:    return UP
+        elif game.keystate[K_DOWN]:  return DOWN
+        else:                        return None
         
+    def update(self, game):
+        VGDLSprite.update(self, game)
+        action = self._readAction(game)
+        if action:
+            self.physics.activeMovement(self, action)
+        
+class Frog(MovingAvatar):
+    """ Has an additional flag that keeps if from drowning if true. """
+    drowning_safe = False
+    
+    def update(self, game):
+        MovingAvatar.update(self, game)
+        self.drowning_safe = False
+        
+class FlakAvatar(MovingAvatar, SpriteProducer):
+    """ Only horizontal moves. Hitting the space button creates a sprite of the 
+    specified type at its location. """
+    color=GREEN        
+    
+    def update(self, game):
+        VGDLSprite.update(self, game)        
+        action = self._readAction(game)
+        if action in [RIGHT, LEFT]:
+            self.physics.activeMovement(self, action)
+        from pygame.locals import K_SPACE
+        if self.stype and game.keystate[K_SPACE]:
+            game._createSprite([self.stype], (self.rect.left, self.rect.top))
+            
+class OrientedAvatar(OrientedSprite, MovingAvatar):
+    draw_arrow = True      
+    def update(self, game):
+        tmp = self.orientation
+        self.orientation = (0,0)
+        VGDLSprite.update(self, game)
+        action = self._readAction(game)
+        if action:
+            self.physics.activeMovement(self, action)
+        d = self.lastdirection
+        if sum(map(abs, d)) > 0:  
+            # only update if the sprite moved.
+            self.orientation = d
+        else:
+            self.orientation = tmp                    
+    
+class LinkAvatar(OrientedAvatar, SpriteProducer):
+    """ Link can use his sword in front of him. """
+    def __init__(self, stype=None, **kwargs):
+        self.stype = stype
+        OrientedSprite.__init__(self, **kwargs)
+
+    def update(self, game):
+        OrientedAvatar.update(self, game)
+        from pygame.locals import K_SPACE
+        if self.stype and game.keystate[K_SPACE]:
+            u = unitVector(self.orientation)
+            game._createSprite([self.stype], (self.rect.left+u[0]*self.rect.size[0],
+                                              self.rect.top+u[1]*self.rect.size[1]))    
+                            
+class InertialAvatar(OrientedAvatar):
+    speed=1
+    physicstype=ContinuousPhysics
+    def update(self, game):
+        MovingAvatar.update(self, game)
+        
+                
         
 # ---------------------------------------------------------------------
 #     Termination criteria
@@ -289,27 +342,30 @@ def undoAll(sprite, partner, game):
             
 def bounceForward(sprite, partner, game):
     """ The partner sprite pushed, so if possible move in the opposite direction. """
-    sprite._updatePos(partner.lastdirection)
-    # check for new induced collisions
+    sprite.physics.activeMovement(sprite, unitVector(partner.lastdirection))
     game._updateCollisionDict()
     
 def turnAround(sprite, partner, game):
     sprite.rect=sprite.lastrect    
-    sprite.lastmove = 100
-    sprite._updatePos(sprite.physics._scaleDir(DOWN))
-    sprite.lastmove = 100
-    sprite._updatePos(sprite.physics._scaleDir(DOWN))
-    changeDirection(sprite, partner, game)
+    sprite.lastmove = sprite.cooldown
+    sprite.physics.activeMovement(sprite, DOWN)
+    sprite.lastmove = sprite.cooldown
+    sprite.physics.activeMovement(sprite, DOWN)
+    reverseDirection(sprite, partner, game)
+    game._updateCollisionDict()
     
-def changeDirection(sprite, partner, game):
-    if sprite.direction==RIGHT:
-        sprite.direction=LEFT
-    elif sprite.direction==LEFT:
-        sprite.direction=RIGHT
-    elif sprite.direction==UP:
-        sprite.direction=DOWN
-    elif sprite.direction==DOWN:
-        sprite.direction=UP
+def reverseDirection(sprite, partner, game):
+    sprite.orientation = (-sprite.orientation[0], -sprite.orientation[1])
+    
+def bounceDirection(sprite, partner, game, friction=1):
+    """ The centers of the objects determine the direction"""
+    # TODO: not yet correct
+    stepBack(sprite, partner, game)
+    inc = sprite.orientation
+    snorm = unitVector((-sprite.rect.centerx+partner.rect.centerx, 
+                        -sprite.rect.centery+partner.rect.centery))
+    dp = snorm[0]*inc[0]+snorm[1]*inc[1]
+    sprite.orientation = ((2*dp*snorm[0] - inc[0])*friction, (2*dp*snorm[1] - inc[1])*friction)   
         
 def drownSprite(sprite, partner, game):
     if not sprite.drowning_safe:
@@ -320,13 +376,13 @@ def drownSafe(sprite, partner, game):
     
 def wrapAround(sprite, partner, game):
     """ Move to the edge of the screen in the direction the sprite is coming from. """
-    if sprite.direction[0] > 0:
+    if sprite.orientation[0] > 0:
         sprite.rect.left=0
-    elif sprite.direction[0] < 0:
+    elif sprite.orientation[0] < 0:
         sprite.rect.left=game.screensize[0]-sprite.rect.size[0]
-    if sprite.direction[1] > 0:
+    if sprite.orientation[1] > 0:
         sprite.rect.top=0
-    elif sprite.direction[1] < 0:        
+    elif sprite.orientation[1] < 0:        
         sprite.rect.top=game.screensize[1]-sprite.rect.size[1]
     sprite.lastmove=0
     
@@ -338,7 +394,7 @@ def pullWithIt(sprite, partner, game):
             return
     sprite.lastpull = game.time
     tmp = sprite.lastrect
-    sprite._updatePos(partner.lastdirection, speedup=1)
+    sprite._updatePos(partner.lastdirection, 1)
     sprite.lastrect = tmp
     
 def teleportToExit(sprite, partner, game):

@@ -11,9 +11,9 @@ wo iw        wx   w
 wwwww      o wwwwww
 w     w r      w ow
 w <   wwwwwww    ww
-w      x     <    w
+w  r   x     <    w
 wwwww     www     w
-wr        i       w
+w         i       w
 wwwIw   v    x  www
 wwwwwwwwwwwwwwwwwww
 """
@@ -23,10 +23,10 @@ BasicGame
     SpriteSet
         bullet > color=ORANGE
             sitting  > Immovable
-            random   > RandomNPC speedup=0.25
-            straight > Missile   speedup=0.5
-                vertical   > direction=UP
-                horizontal > direction=LEFT
+            random   > RandomNPC speed=0.25
+            straight > Missile   speed=0.5
+                vertical   > orientation=UP
+                horizontal > orientation=LEFT
         structure > Immovable            
             wall  > 
             goal  > color=GREEN
@@ -39,10 +39,11 @@ BasicGame
         avatar    > MovingAvatar
     
     InteractionSet
-        goal   avatar > killSprite
-        avatar bullet > killSprite
-        avatar wall   > stepBack
-        straight wall > changeDirection
+        goal   avatar    > killSprite
+        avatar bullet    > killSprite
+        avatar wall      > stepBack
+        random structure > stepBack
+        straight wall    > reverseDirection
         avatar portalentry > teleportToExit
         
     TerminationSet

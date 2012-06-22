@@ -12,10 +12,10 @@ BasicGame
         base    > Immovable    color=WHITE
         avatar  > FlakAvatar   stype=sam
         missile > Missile
-            sam  > direction=UP    color=BLUE singleton=True
-            bomb > direction=DOWN  color=RED  speedup=0.5
-        alien   > Bomber       stype=bomb   prob=0.02  cooldown=4
-        portal  > SpawnPoint   stype=alien  delay=16    total=20
+            sam  > orientation=UP    color=BLUE singleton=True
+            bomb > orientation=DOWN  color=RED  speed=0.5
+        alien   > Bomber       stype=bomb   prob=0.01  cooldown=3 speed=0.75
+        portal  > SpawnPoint   stype=alien  delay=16   total=20
     
     LevelMapping
         0 > base

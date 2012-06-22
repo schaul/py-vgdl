@@ -23,7 +23,7 @@ BasicGame frame_rate=30
         wall   > Immovable 
         hole   > Immovable color=GREEN
         movable >
-            avatar > MovingAvatar cooldown=10
+            avatar > MovingAvatar cooldown=4
             box    > Passive                
     LevelMapping
         w > wall

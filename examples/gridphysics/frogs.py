@@ -28,10 +28,10 @@ BasicGame
         structure > Immovable
             water > color=BLUE
             goal  > color=GREEN
-        log    > Missile    direction=LEFT  speedup=0.1 color=BROWN
-        truck  > Missile    direction=RIGHT 
-            fasttruck  > speedup=0.2  color=ORANGE
-            slowtruck  > speedup=0.1  color=RED
+        log    > Missile    orientation=LEFT  speed=0.1 color=BROWN
+        truck  > Missile    orientation=RIGHT 
+            fasttruck  > speed=0.2  color=ORANGE
+            slowtruck  > speed=0.1  color=RED
         avatar > Frog
         # defining 'wall' last, makes the walls show on top of all other sprites
         wall > Immovable                       

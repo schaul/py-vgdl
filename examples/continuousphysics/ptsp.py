@@ -10,19 +10,24 @@ BasicGame
     SpriteSet    
         wall   > Immovable
         pad    > Immovable color=BLUE 
-        avatar > InertialVehicle
+        inertial > 
+            avatar > InertialAvatar
+            bullet > RandomInertial
             
     TerminationSet
-        SpriteCounter stype=pad limit=0 win=True     
+        SpriteCounter stype=pad    win=True     
+        SpriteCounter stype=avatar win=False     
            
     InteractionSet
-        avatar wall > changeDirection 
-        pad avatar  > killSprite
+        inertial wall > bounceDirection 
+        avatar bullet > killSprite
+        pad avatar    > killSprite
         
     LevelMapping
         w > wall
         1 > avatar
         2 > pad
+        3 > bullet
 """
 
 ptsp_level = """
@@ -32,7 +37,7 @@ w    1    wwww    www      w
 w                   w     ww
 w             2     w  2   w
 w   w                      w
-w    www                w  w
+w    www   3            w  w
 w      wwwwwww        www  w
 w                    ww    w
 w  2                  w    w
@@ -43,5 +48,5 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwww
 
 if __name__ == "__main__":
     from core import VGDLParser
-    #VGDLParser.playGame(ptsp_game, ptsp_level)
-    #TODO    
+    VGDLParser.playGame(ptsp_game, ptsp_level)
+        

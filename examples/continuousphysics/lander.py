@@ -18,7 +18,7 @@ BasicGame
            
     InteractionSet
         avatar wall > killSprite 
-        pad avatar  > killIfSlow    # relative velovity
+        pad avatar  > killIfSlow    # relative velocity
         
     LevelMapping
         w > wall
