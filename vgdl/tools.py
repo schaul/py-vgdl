@@ -4,16 +4,28 @@ Video game description language -- utility functions.
 @author: Tom Schaul
 '''
 
+from math import sqrt
 
-def triPoints(rect, direction):
+
+def vectNorm(v):
+    return sqrt(float(v[0])**2+v[1]**2)
+
+def unitVector(v):
+    l = vectNorm(v)
+    if l > 0:
+        return (v[0]/l, v[1]/l)
+    else:
+        return (1, 0)
+    
+def triPoints(rect, orientation):
     """ Returns the pointlist for a triangle 
-    in the middle of the provided rect, pointing in the direction (given as angle from upwards,
-    or direction vector) """    
-    p1 = (rect.center[0]+direction[0]*rect.size[0]/2.,
-          rect.center[1]+direction[1]*rect.size[1]/2.)
-    p2 = (rect.center[0]-direction[0]*rect.size[0]/4.,
-          rect.center[1]-direction[1]*rect.size[1]/4.)
-    orthdir = (direction[1], -direction[0])
+    in the middle of the provided rect, pointing in the orientation (given as angle from upwards,
+    or orientation vector) """    
+    p1 = (rect.center[0]+orientation[0]*rect.size[0]/3.,
+          rect.center[1]+orientation[1]*rect.size[1]/3.)
+    p2 = (rect.center[0]-orientation[0]*rect.size[0]/4.,
+          rect.center[1]-orientation[1]*rect.size[1]/4.)
+    orthdir = (orientation[1], -orientation[0])
     p2a = (p2[0]-orthdir[0]*rect.size[0]/6.,
            p2[1]-orthdir[1]*rect.size[1]/6.)
     p2b = (p2[0]+orthdir[0]*rect.size[0]/6.,

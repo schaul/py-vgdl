@@ -14,8 +14,8 @@ BasicGame
         wall   > Immovable
         cocoon > Immovable color=BLUE 
         animal > physicstype=GridPhysics
-            avatar    > MovingAvatar speedup=1.5
-            butterfly > RandomNPC 
+            avatar    > MovingAvatar 
+            butterfly > RandomNPC speed=0.6
             
     TerminationSet
         SpriteCounter stype=butterfly win=True     

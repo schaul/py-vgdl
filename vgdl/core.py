@@ -267,43 +267,45 @@ class VGDLSprite(object):
     
     is_static= False
     color    = None
-    speedup  = 1
     cooldown = 0 # pause ticks in-between two moves 
+    speed    = None   
+    mass     = 1
+    physicstype=None
     
-    def __init__(self, pos, size=(10,10), color=None, speedup=None, cooldown=None, physicstype=None):
+    def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None):
         self.rect = pygame.Rect(pos, size)
         self.lastrect = self.rect
-        if not physicstype:
+        if physicstype is not None:
+            self.physicstype = physicstype            
+        elif self.physicstype is None:
             from ontology import GridPhysics
-            physicstype = GridPhysics
-        self.physics = physicstype(size)
-        if speedup is not None:
-            self.speedup = speedup
+            self.physicstype = GridPhysics
+        self.physics = self.physicstype(size)
+        if speed is not None:
+            self.speed = speed
         if cooldown is not None:
             self.cooldown = cooldown
         if color:
             self.color = color
         elif self.color is None:
             self.color = (choice(self.COLOR_DISC), choice(self.COLOR_DISC), choice(self.COLOR_DISC))
+        # how many timesteps ago was the last move?
         self.lastmove = 0        
         
     def update(self, game):
         """ The main place where subclasses differ. """
-        self.lastmove += 1
-        self.lastrect = self.rect        
-    
-    def _updatePos(self, direction, speedup=None):
-        if not speedup:
-            speedup = self.speedup
         self.lastrect = self.rect
-        if self.cooldown > self.lastmove:
-            self.lastmove += 1
-        elif abs(direction[0])+abs(direction[1])==0:
-            # no need to redraw if nothing was updated
-            self.lastmove += 1
-        else:
-            self.rect = self.rect.move((direction[0]*speedup, direction[1]*speedup))
-            self.lastmove = 0       
+        # no need to redraw if nothing was updated
+        self.lastmove += 1
+        if not self.is_static:
+            self.physics.passiveMovement(self)
+        
+    def _updatePos(self, orientation, speed=None):
+        if not speed:
+            speed = self.speed
+        if not(self.cooldown > self.lastmove or abs(orientation[0])+abs(orientation[1])==0):
+            self.rect = self.rect.move((orientation[0]*speed, orientation[1]*speed))
+            self.lastmove = 0
     
     @property
     def lastdirection(self):
