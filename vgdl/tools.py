@@ -17,6 +17,16 @@ def unitVector(v):
     else:
         return (1, 0)
     
+def oncePerStep(sprite, game, name):
+    """ Utility for guaranteeing that an event gets triggered only once per time-step on each sprite. """
+    name = "_"+name
+    if hasattr(sprite, name):
+        # bounce only once per timestep, even if there are multiple collisions
+        if sprite.__dict__[name] == game.time:
+            return False
+    sprite.lastbounce = game.time
+    return True
+    
 def triPoints(rect, orientation):
     """ Returns the pointlist for a triangle 
     in the middle of the provided rect, pointing in the orientation (given as angle from upwards,
