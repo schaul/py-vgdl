@@ -7,7 +7,8 @@ Video game description language -- parser, framework and core game classes.
 import pygame
 from random import choice
 from tools import Node, indentTreeParser
-
+from collections import defaultdict
+ 
 
 class VGDLParser(object):
     """ Parses a string into a Game object. """    
@@ -199,7 +200,7 @@ class BasicGame(object):
             
     def _updateCollisionDict(self):
         # create a dictionary that maps type pairs to a list of sprite pairs
-        self.lastcollisions = {}
+        self.lastcollisions = defaultdict(list)
         nonstatics = [s for s in self if not s.is_static]
         statics = [s for s in self if s.is_static]
         for i, s1 in enumerate(nonstatics):
@@ -208,16 +209,11 @@ class BasicGame(object):
                 if s1.rect.colliderect(s2.rect):
                     for key1 in s1.stypes:
                         for key2 in s2.stypes:
-                            if (key1, key2) not in self.lastcollisions:
-                                self.lastcollisions[(key1, key2)] = []
-                                self.lastcollisions[(key2, key1)] = []
                             self.lastcollisions[(key1, key2)].append((s1, s2))
                             self.lastcollisions[(key2, key1)].append((s2, s1))
             # detect end-of-screen
             if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
                 for key1 in s1.stypes:
-                    if (key1, 'EOS') not in self.lastcollisions:
-                        self.lastcollisions[(key1, 'EOS')] = []
                     self.lastcollisions[(key1, 'EOS')].append((s1, None))
                                     
     def startGame(self):
@@ -245,9 +241,8 @@ class BasicGame(object):
             # handle collision effects
             self._updateCollisionDict()
             for g1, g2, effect, args in self.collision_eff:
-                if (g1, g2) in self.lastcollisions:
-                    for s1, s2 in set(self.lastcollisions[(g1, g2)]):
-                        effect(s1, s2, self, **args)
+                for s1, s2 in set(self.lastcollisions[(g1, g2)]):
+                    effect(s1, s2, self, **args)
             self._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
             VGDLSprite.dirtyrects = []
