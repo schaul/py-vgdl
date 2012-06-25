@@ -5,8 +5,9 @@ Video game description language -- ontology of concepts.
 '''
 
 from random import choice, random
+from math import sqrt
 import pygame
-from tools import triPoints, unitVector, vectNorm
+from tools import triPoints, unitVector, vectNorm, oncePerStep
 
 # ---------------------------------------------------------------------
 #     Constants
@@ -153,7 +154,7 @@ class OrientedSprite(VGDLSprite):
     orientation = RIGHT    
     def __init__(self, orientation=None, draw_arrow=None, **kwargs):
         VGDLSprite.__init__(self, **kwargs)
-        if orientation:   
+        if orientation is not None:   
             self.orientation=orientation
         if draw_arrow is not None:
             self.draw_arrow = draw_arrow        
@@ -168,7 +169,44 @@ class OrientedSprite(VGDLSprite):
 class Missile(OrientedSprite):
     """ A sprite that constantly moves in the same direction. """            
     speed = 1 
-
+    
+class Walker(Missile):
+    """ Keep moving in the current horizontal direction. If stopped, pick one randomly. """
+    airsteering=False
+    def __init__(self, airsteering=None, **kwargs):
+        Missile.__init__(self, **kwargs)
+        if airsteering is not None:   
+            self.airsteering=airsteering
+    
+    def update(self, game):
+        if self.airsteering or self.lastdirection[0] == 0:
+            if self.orientation[0] > 0:
+                d = 1
+            elif self.orientation[0] < 0:
+                d = -1
+            else:
+                d = choice([-1, 1])
+            self.physics.activeMovement(self, (d, 0))    
+        Missile.update(self, game)
+        
+    
+class WalkJumper(Walker):
+    prob = 0.1
+    strength = 10
+    def __init__(self, prob=None, strength=None, **kwargs):
+        Walker.__init__(self, **kwargs)
+        if prob is not None:   
+            self.prob=prob
+        if strength is not None:
+            self.strength = strength        
+    
+    def update(self, game):
+        if self.lastdirection[0] == 0:
+            if self.prob < random():
+                self.physics.activeMovement(self, (0, -self.strength))    
+        Walker.update(self, game)
+        
+    
 class RandomInertial(OrientedSprite, RandomNPC):
     physicstype=ContinuousPhysics    
         
@@ -274,7 +312,35 @@ class InertialAvatar(OrientedAvatar):
     physicstype=ContinuousPhysics
     def update(self, game):
         MovingAvatar.update(self, game)
-                    
+        
+class MarioAvatar(InertialAvatar):
+    """ Mario can have two states: in contact with the ground, or in parabolic flight. """
+    physicstype=GravityPhysics    
+    draw_arrow=False
+    strength=10
+    airsteering=False    
+    def __init__(self, strength=None, airsteering=None, **kwargs):
+        if airsteering is not None:
+            self.airsteering = airsteering
+        if strength is not None:
+            self.strength = strength
+        InertialAvatar.__init__(self, **kwargs)
+
+    def update(self, game):
+        action = self._readAction(game)
+        if action is None:
+            action = (0,0)
+        from pygame.locals import K_SPACE
+        if game.keystate[K_SPACE] and self.orientation[1]==0:
+            action = (action[0]*sqrt(self.strength), -self.strength)
+        elif self.orientation[1]==0 or self.airsteering:
+            action = (action[0]*sqrt(self.strength), 0)
+        else:
+            action = (0,0)
+        self.physics.activeMovement(self, action)
+        VGDLSprite.update(self, game)
+    
+                        
         
 # ---------------------------------------------------------------------
 #     Termination criteria
@@ -335,7 +401,7 @@ def transformTo(sprite, partner, game, stype=None):
     
 def stepBack(sprite, partner, game):
     """ Revert last move. """
-    sprite.rect=sprite.lastrect    
+    sprite.rect=sprite.lastrect   
     
 def undoAll(sprite, partner, game):
     """ Revert last moves of all sprites. """
@@ -369,20 +435,30 @@ def bounceDirection(sprite, partner, game, friction=0):
     dp = snorm[0]*inc[0]+snorm[1]*inc[1]
     sprite.orientation = (2*dp*snorm[0] - inc[0], 2*dp*snorm[1] - inc[1])   
     sprite.speed *= (1.-friction)
-    
+        
 def wallBounce(sprite, partner, game, friction=0):
     """ Bounce off orthogonally to the wall. """
-    if hasattr(sprite, 'lastbounce'):
-        # bounce only once per timestep, even if there are multiple collisions
-        if sprite.lastbounce == game.time:
-            return
-    sprite.lastbounce = game.time
+    if not oncePerStep(sprite, game, 'lastbounce'): 
+        return
     sprite.speed *= (1.-friction)
     stepBack(sprite, partner, game)
     if abs(sprite.rect.centerx-partner.rect.centerx) > abs(sprite.rect.centery-partner.rect.centery):
         sprite.orientation = (-sprite.orientation[0], sprite.orientation[1])
     else:
         sprite.orientation = (sprite.orientation[0], -sprite.orientation[1])    
+        
+def wallStop(sprite, partner, game, friction=0):
+    """ Stop just in front of the wall, removing that velocity component,
+    but possibly sliding along it. """
+    if not oncePerStep(sprite, game, 'laststop'): 
+        return
+    stepBack(sprite, partner, game)
+    if abs(sprite.rect.centerx-partner.rect.centerx) > abs(sprite.rect.centery-partner.rect.centery):
+        sprite.orientation = (0, sprite.orientation[1]*(1.-friction))
+    else:
+        sprite.orientation = (sprite.orientation[0]*(1.-friction), 0)        
+    sprite.speed = vectNorm(sprite.orientation)*sprite.speed
+    sprite.orientation = unitVector(sprite.orientation)
         
 def killIfSlow(sprite, partner, game, limitspeed=1):
     """ Take a decision based on relative speed. """
@@ -417,13 +493,11 @@ def wrapAround(sprite, partner, game):
     
 def pullWithIt(sprite, partner, game):
     """ The partner sprite adds its movement to the sprite's. """
-    if hasattr(sprite, 'lastpull'):
-        # pull only once per timestep, even if there are multiple collisions
-        if sprite.lastpull == game.time:
-            return
-    sprite.lastpull = game.time
+    if not oncePerStep(sprite, game, 'lastpull'): 
+        return
     tmp = sprite.lastrect
     sprite._updatePos(partner.lastdirection, 1)
+    sprite.speed=0
     sprite.lastrect = tmp
     
 def teleportToExit(sprite, partner, game):
