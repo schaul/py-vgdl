@@ -1,15 +1,17 @@
 Game dynamics:
 - resource-type objects (health, heat, ...)
 - chasing NPCs
+- direction-based shooting
+- momentum-preserving splits
+- non-square sprites?
 
 Example games:
 - pacman
-- super mario
 - asteroids
 - pong
 
 Other:
-- nicer graphics
+- nicer graphics, possibly based on palettes
 - interface to artificial agents
 - full score system
 - homogeneous level descriptions
