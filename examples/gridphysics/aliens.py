@@ -46,7 +46,7 @@ w2                             w
 w000                           w
 w000                           w
 w                              w
-w                              w
+w                              w 
 w                              w
 w                              w
 w    000      000000     000   w

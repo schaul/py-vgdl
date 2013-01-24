@@ -5,22 +5,20 @@ Maze-like games: find the exit in the minimal amount of time.
 '''
 
 maze_level_1 = """
-wwwwwww
-w    0w
-w     w
-w1    w
-wwwwwww
+wwwwww
+w   0w
+w    w
+w1w  w
+wwwwww
 """
 
 maze_level_2 = """
 wwwwwwwwwwwww
 w1       w  w
-w  w        w
 w   w   w  ww
 www w   wwwww
 w       w 0 w
-w          ww
-w          ww
+w    w     ww
 wwwwwwwwwwwww
 """
 

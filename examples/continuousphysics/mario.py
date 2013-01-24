@@ -55,5 +55,5 @@ wwwwwwwwww      wwww       w
 """
 
 if __name__ == "__main__":
-    from core import VGDLParser
+    from vgdl.core import VGDLParser
     VGDLParser.playGame(mario_game, mario_level)
