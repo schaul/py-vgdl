@@ -132,13 +132,12 @@ class BasicGame(object):
         lines = [l for l in lstr.split("\n") if len(l)>0]
         lengths = map(len, lines)
         assert min(lengths)==max(lengths), "Inconsistent line lengths."
-        width = lengths[0]
-        height = len(lines)
-        assert width > 1 and height > 1, "Level too small."
-        
+        self.width = lengths[0]
+        self.height = len(lines)
+        assert self.width > 1 and self.height > 1, "Level too small."
         # rescale pixels per block to adapt to the level        
-        self.block_size = max(1,int(500/max(width, height)))*2
-        self._initScreen((width*self.block_size, height*self.block_size))
+        self.block_size = max(1,int(500/max(self.width, self.height)))*2
+        self.screensize = (self.width*self.block_size, self.height*self.block_size)
         
         # create sprites
         for row, l in enumerate(lines):
@@ -146,7 +145,9 @@ class BasicGame(object):
                 if c in self.char_mapping:
                     pos = (col*self.block_size, row*self.block_size)
                     self._createSprite(self.char_mapping[c], pos)
-                
+        self.kill_list=[]
+        
+                        
     def _createSprite(self, keys, pos):
         for key in keys:
             if self.num_sprites > self.MAX_SPRITES:
@@ -168,7 +169,6 @@ class BasicGame(object):
             
     def _initScreen(self, size):
         pygame.init()    
-        self.screensize = size
         self.screen = pygame.display.set_mode(size)
         self.background = pygame.Surface(size)
         self.screen.blit(self.background, (0,0))
@@ -181,10 +181,11 @@ class BasicGame(object):
                 
     def numSprites(self, key):
         """ Abstract sprite groups are computed on demand only """
+        deleted = len([s for s in self.kill_list if s.name==key])
         if key in self.sprite_groups:
-            return len(self.sprite_groups[key])
+            return len(self.sprite_groups[key])-deleted
         else: 
-            return len([s for s in self if key in s.stypes])
+            return len([s for s in self if key in s.stypes])-deleted
         
     def _clearAll(self):
         for s in set(self.kill_list):
@@ -215,8 +216,14 @@ class BasicGame(object):
             if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
                 for key1 in s1.stypes:
                     self.lastcollisions[(key1, 'EOS')].append((s1, None))
-                                    
-    def startGame(self):
+                    
+    def _eventHandling(self):
+        for g1, g2, effect, args in self.collision_eff:
+            for s1, s2 in set(self.lastcollisions[(g1, g2)]):
+                effect(s1, s2, self, **args)
+                                            
+    def startGame(self):        
+        self._initScreen(self.screensize)
         clock = pygame.time.Clock()
         self.time = 0
         self.kill_list=[]
@@ -240,9 +247,7 @@ class BasicGame(object):
                 s.update(self)                
             # handle collision effects
             self._updateCollisionDict()
-            for g1, g2, effect, args in self.collision_eff:
-                for s1, s2 in set(self.lastcollisions[(g1, g2)]):
-                    effect(s1, s2, self, **args)
+            self._eventHandling()
             self._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
             VGDLSprite.dirtyrects = []
