@@ -35,33 +35,33 @@ wwwwwwwwwwwww
 """
 
 office_layout = """
-wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww        
-w 1   w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-w     w     w     w     w     w     w        
-ww wwwww wwwww wwwww wwwww wwwww wwww        
-w                                   w        
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+w 1   w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+w     w     w     w     w     w     wwwwwwwww
+ww wwwww wwwww wwwww wwwww wwwww wwwwwwwwwwww
+w                                   wwwwwwwww
 w                                   wwwwwwwww
 w                                   w       w
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww           w
-                                w   w       w
-                                w   w       w
-                                w   w       w
-                                w   wwwwwwwww
-                                w   w       w
-                                w           w
-                                w   w       w
-                                w   w       w
-                                w   w       w
-                                w   wwwwwwwww
-                                w   w        
-                                w 0 w        
-                                wwwww        
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   wwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww           w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   w       w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   wwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   wwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww 0 wwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
         
 maze_game = """

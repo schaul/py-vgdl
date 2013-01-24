@@ -28,8 +28,9 @@ class MDPconverter(object):
         with 4 actions, outcomes are deterministic, physics are grid-based,
         and all other sprites are Immovables. """
         
-    def __init__(self, game):
+    def __init__(self, game, verbose=False):
         self.game = game
+        self.verbose=verbose
         self.actions = BASEDIRS
         self.sas_tuples = []
         self.rewards = {}
@@ -47,23 +48,38 @@ class MDPconverter(object):
                 # retain observable features
                 tmp = [self.rect2pos(sprite.rect) for sprite in ss if sprite.is_static]
                 obstypes.append(tmp)
+        if self.verbose:
+            if observations:
+                print 'Number of features:', 5*len(obstypes)
+            print 'Maximum state space:', len(allPos)
         initSet = [self.rect2pos(self.avatar.rect)]
         self.states = sorted(flood(self.tryMoves, allPos, initSet))
         dim = len(self.states)        
+        if self.verbose:
+            print 'Actual states:', dim
+            print 'Non-negative rewards:', self.rewards
         Ts = [zeros((dim, dim)) for _ in self.actions]
         R = zeros(dim)
+        statedic= {}
+        actiondic = {}        
         for si, pos in enumerate(self.states):
-            if pos in self.rewards:
-                R[si] += self.rewards[pos]
-            for ai, a in enumerate(self.actions):
-                tmp = 0.
-                for di, dest in enumerate(self.states):
-                    if (pos, a, dest) in self.sas_tuples:
-                        Ts[ai][si, di] += 1
-                        tmp += 1                        
-                if tmp > 1:
-                    Ts[a][si, :] /= tmp
-                
+            statedic[pos] = si
+        for ai, a in enumerate(self.actions):
+            actiondic[a] = ai
+        for pos, val in self.rewards.items():
+            R[statedic[pos]] += val
+        for pos, a, dest in self.sas_tuples:
+            ai = actiondic[a]
+            si = statedic[pos]
+            di = statedic[dest]
+            Ts[ai][si, di] += 1
+        if self.verbose:
+            print 'Built Ts.'
+        for T in Ts:
+            for row in T:  
+                row /= sum(row)
+        if self.verbose:
+            print 'Normalized Ts.'
         if observations:
             # one observation for current position and each of the 4 neighbors.
             fMap = zeros((len(obstypes)*5, dim))
@@ -72,7 +88,8 @@ class MDPconverter(object):
                     for j, obs in enumerate(obstypes):
                         if p in obs:
                             fMap[j*5+i, si] = 1
-                    
+            if self.verbose:
+                print 'Built features.'        
             return Ts, R, fMap
         else:
             return Ts, R
@@ -107,7 +124,8 @@ class MDPconverter(object):
                 # Convention: the first criterion is for keyboard-interrupt termination
                 ended, win = t.isDone(self.game)
                 if ended:
-                    #print 'win', win, pos, a, dest
+                    if self.verbose:
+                        print '    win', win, pos, a, dest
                     if win:
                         self.rewards[dest] = 1
                     else:
