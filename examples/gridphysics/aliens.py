@@ -57,6 +57,6 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 
 if __name__ == "__main__":
-    from core import VGDLParser
+    from vgdl.core import VGDLParser
     # parse, run and play.
     VGDLParser.playGame(aliens_game, aliens_level)    
