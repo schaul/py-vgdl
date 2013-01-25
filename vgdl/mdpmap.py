@@ -19,7 +19,7 @@ Finally, we produce a set of features/observations. Two possibilities:
 """
 from scipy import zeros
 from pybrain.utilities import flood
-from ontology import MovingAvatar, BASEDIRS
+from ontology import MovingAvatar, BASEDIRS, RotatingAvatar
 from core import VGDLSprite
 
     
@@ -34,30 +34,39 @@ class MDPconverter(object):
         self.actions = BASEDIRS
         self.sas_tuples = []
         self.rewards = {}
+        self.oriented = False
         
     def convert(self, observations=True):
         if observations:
             obstypes = []
-            
-        allPos = set([(col, row) for row in range(self.game.height) for col in range(self.game.width)])    
         for _, ss in self.game.sprite_groups.items():
             #find avatar
             if isinstance(ss[0], MovingAvatar):
-                self.avatar = ss[0]
+                self.avatar = ss[0]                
             elif observations:
                 # retain observable features
-                tmp = [self.rect2pos(sprite.rect) for sprite in ss if sprite.is_static]
+                tmp = [self.sprite2state(sprite) for sprite in ss if sprite.is_static]
                 obstypes.append(tmp)
+        # what type of movement dynamics do we use?
+        if isinstance(self.avatar, RotatingAvatar):
+            allPos = set([(col, row, dir_) for row in range(self.game.height) 
+                          for col in range(self.game.width)
+                          for dir_ in BASEDIRS])
+            self.oriented = True
+        else:
+            allPos = set([(col, row) for row in range(self.game.height) 
+                          for col in range(self.game.width)])    
         if self.verbose:
             if observations:
                 print 'Number of features:', 5*len(obstypes)
-            print 'Maximum state space:', len(allPos)
-        initSet = [self.rect2pos(self.avatar.rect)]
+            print 'Maximum state space:', len(allPos), self.game.height*self.game.width*4
+        initSet = [self.sprite2state(self.avatar)]
         self.states = sorted(flood(self.tryMoves, allPos, initSet))
         dim = len(self.states)        
         if self.verbose:
             print 'Actual states:', dim
             print 'Non-negative rewards:', self.rewards
+            print 'Initial state', initSet[0]
         Ts = [zeros((dim, dim)) for _ in self.actions]
         R = zeros(dim)
         statedic= {}
@@ -84,7 +93,7 @@ class MDPconverter(object):
             # one observation for current position and each of the 4 neighbors.
             fMap = zeros((len(obstypes)*5, dim))
             for si, pos in enumerate(self.states):
-                for i, p in enumerate([pos]+self.posNeighbors(pos)):
+                for i, p in enumerate([pos]+self.stateNeighbors(pos)):
                     for j, obs in enumerate(obstypes):
                         if p in obs:
                             fMap[j*5+i, si] = 1
@@ -94,29 +103,52 @@ class MDPconverter(object):
         else:
             return Ts, R
 
-    def posNeighbors(self, pos):
+    def stateNeighbors(self, state):
+        if self.oriented:
+            pos = (state[0], state[1])
+        else:
+            pos = state
         return [(a[0]+pos[0], a[1]+pos[1]) for a in self.actions]
     
+    def sprite2state(self, s):
+        pos = self.rect2pos(s.rect)
+        if self.oriented:
+            return (pos[0], pos[1], s.orientation)
+        else:
+            return pos
+        
     def rect2pos(self, r):
         return (r.left / self.game.block_size, r.top / self.game.block_size)
     
-    def setRectPos(self, r, pos):
-        r.left = pos[0] * self.game.block_size
-        r.top = pos[1] * self.game.block_size
+    def setRectPos(self, rect, pos):
+        rect.left = pos[0] * self.game.block_size
+        rect.top = pos[1] * self.game.block_size
+        
+    def setSpriteState(self, s, state):
+        if self.oriented:
+            s.orientation = state[2]
+            self.setRectPos(s.rect, (state[0], state[1]))
+        else:
+            self.setRectPos(s.rect, state)
+        
+    def setState(self, state):
+        self.setSpriteState(self.avatar, state)
+        self.game.kill_list = []   
+        VGDLSprite.update(self.avatar, self.game)            
     
     def tryMoves(self, pos):
         res = []
         for a in self.actions:
             # reset game to starting state
-            self.setRectPos(self.avatar.rect, pos)
-            self.game.kill_list = []   
-            VGDLSprite.update(self.avatar, self.game)
+            self.setState(pos)
             # take action and compute consequences
-            self.avatar.physics.activeMovement(self.avatar, a)
+            self.avatar._readMultiActions = lambda *x: [a]
+            #self.avatar.physics.activeMovement(self.avatar, a)
+            self.avatar.update(self.game)
             self.game._updateCollisionDict()
             self.game._eventHandling()
             # remember the outcome of the action
-            dest = self.rect2pos(self.avatar.rect)
+            dest = self.sprite2state(self.avatar)
             res.append(dest)
             self.sas_tuples.append((pos, a, dest))            
             # remember reward if the final state ends the game
@@ -135,11 +167,11 @@ class MDPconverter(object):
     
 def testMaze():
     from core import VGDLParser
-    from examples.gridphysics.mazes import maze_game, maze_level_1
-    game_str, map_str = maze_game, maze_level_1
+    from examples.gridphysics.mazes import * #@UnusedWildImport
+    game_str, map_str = polarmaze_game, maze_level_1
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
-    C = MDPconverter(g)
+    C = MDPconverter(g, verbose=True)
     Ts, R, fMap = C.convert()
     print C.states
     print R
