@@ -308,6 +308,8 @@ class RotatingAvatar(OrientedSprite, MovingAvatar):
     """ Avatar retains its orientation, and moves forward/backward or rotates 
     relative to that. """
     draw_arrow = True      
+    speed = 0
+    
     def update(self, game):
         actions = self._readMultiActions(game)
         if UP in actions:
