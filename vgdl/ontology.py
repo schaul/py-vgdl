@@ -26,7 +26,7 @@ DOWN   = (0,  1)
 LEFT   = (-1, 0)
 RIGHT  = ( 1, 0)
 
-BASEDIRS = [UP, RIGHT, DOWN, LEFT]
+BASEDIRS = [UP, LEFT, DOWN, RIGHT]
 
 # ---------------------------------------------------------------------
 #     Types of physics
@@ -42,7 +42,7 @@ class GridPhysics():
             speed=1
         else:
             speed=sprite.speed        
-        if speed > 0 and hasattr(sprite, 'orientation'):
+        if speed != 0 and hasattr(sprite, 'orientation'):
             sprite._updatePos(sprite.orientation, speed*self.gridsize[0])   
     
     def activeMovement(self, sprite, action):
@@ -50,7 +50,7 @@ class GridPhysics():
             speed=1
         else:
             speed=sprite.speed
-        if speed >0 and action is not None:
+        if speed != 0 and action is not None:
             sprite._updatePos(action, speed*self.gridsize[0])
     
 class ContinuousPhysics(GridPhysics):
@@ -239,16 +239,26 @@ class Bomber(SpawnPoint, Missile):
 #     Avatars: player-controlled sprite types
 # ---------------------------------------------------------------------
 class MovingAvatar(VGDLSprite):
+    """ Default avatar, moves in the 4 cardinal directions. """
     color=WHITE    
     speed=1    
     def _readAction(self, game):        
-        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
-        if   game.keystate[K_RIGHT]: return RIGHT
-        elif game.keystate[K_LEFT]:  return LEFT
-        elif game.keystate[K_UP]:    return UP
-        elif game.keystate[K_DOWN]:  return DOWN
-        else:                        return None
+        actions = self._readMultiActions(game)
+        if actions:
+            return actions[0]
+        else:
+            return None
         
+    def _readMultiActions(self, game):
+        """ Read multiple simultaneously pressed button actions. """        
+        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
+        res = []
+        if   game.keystate[K_RIGHT]: res += [RIGHT]
+        elif game.keystate[K_LEFT]:  res += [LEFT]
+        if   game.keystate[K_UP]:    res += [UP]
+        elif game.keystate[K_DOWN]:  res += [DOWN]
+        return res
+
     def update(self, game):
         VGDLSprite.update(self, game)
         action = self._readAction(game)
@@ -278,6 +288,7 @@ class FlakAvatar(MovingAvatar, SpriteProducer):
             game._createSprite([self.stype], (self.rect.left, self.rect.top))
             
 class OrientedAvatar(OrientedSprite, MovingAvatar):
+    """ Avatar retains its orientation, but moves in cardinal directions. """
     draw_arrow = True      
     def update(self, game):
         tmp = self.orientation
@@ -291,8 +302,27 @@ class OrientedAvatar(OrientedSprite, MovingAvatar):
             # only update if the sprite moved.
             self.orientation = d
         else:
-            self.orientation = tmp                    
-    
+            self.orientation = tmp    
+            
+class RotatingAvatar(OrientedSprite, MovingAvatar):                
+    """ Avatar retains its orientation, and moves forward/backward or rotates 
+    relative to that. """
+    draw_arrow = True      
+    def update(self, game):
+        actions = self._readMultiActions(game)
+        if UP in actions:
+            self.speed=1
+        elif DOWN in actions:
+            self.speed = -1
+        if LEFT in actions:
+            i = BASEDIRS.index(self.orientation)
+            self.orientation = BASEDIRS[(i+1)%len(BASEDIRS)]
+        elif RIGHT in actions:
+            i = BASEDIRS.index(self.orientation)
+            self.orientation = BASEDIRS[(i-1)%len(BASEDIRS)]    
+        VGDLSprite.update(self, game)
+        self.speed = 0
+        
 class LinkAvatar(OrientedAvatar, SpriteProducer):
     """ Link can use his sword in front of him. """
     def __init__(self, stype=None, **kwargs):

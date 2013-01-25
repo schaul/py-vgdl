@@ -63,6 +63,17 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww   wwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww 0 wwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
+
+office_layout_2 = """
+wwwwwwwwwwwwwwwwwww
+w 1   w     w     w
+w     w     w     w
+w     w     w     w
+w     w     w     w
+ww wwwww wwwww wwww
+w                0w
+wwwwwwwwwwwwwwwwwww
+"""
         
 maze_game = """
 BasicGame 
@@ -81,10 +92,28 @@ BasicGame
         SpriteCounter stype=goal   limit=0 win=True
 """
 
+
+polarmaze_game = """
+BasicGame 
+    SpriteSet         
+        wall   > Immovable 
+        goal   > Immovable color=GREEN
+        avatar > RotatingAvatar
+    LevelMapping
+        w > wall
+        0 > goal
+        1 > avatar                    
+    InteractionSet
+        avatar wall   > stepBack
+        goal avatar   > killSprite                                
+    TerminationSet
+        SpriteCounter stype=goal   limit=0 win=True
+"""
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
+    VGDLParser.playGame(polarmaze_game, office_layout_2)
     VGDLParser.playGame(maze_game, maze_level_1)
     VGDLParser.playGame(maze_game, maze_level_2)
     VGDLParser.playGame(maze_game, maze_level_3)
-    VGDLParser.playGame(maze_game, office_layout)
+    VGDLParser.playGame(polarmaze_game, office_layout)
         
