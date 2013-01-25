@@ -97,3 +97,6 @@ def indentTreeParser(s, tabsize=8):
             indent = len(l)-len(l.lstrip())
             last = Node(content, indent, last)
     return last.getRoot()
+
+def listRotate(l, n):
+    return l[n:] + l[:n]

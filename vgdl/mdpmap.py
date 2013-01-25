@@ -21,6 +21,7 @@ from scipy import zeros
 from pybrain.utilities import flood
 from ontology import MovingAvatar, BASEDIRS, RotatingAvatar
 from core import VGDLSprite
+from tools import listRotate
 
     
 class MDPconverter(object):
@@ -59,7 +60,7 @@ class MDPconverter(object):
         if self.verbose:
             if observations:
                 print 'Number of features:', 5*len(obstypes)
-            print 'Maximum state space:', len(allPos), self.game.height*self.game.width*4
+            print 'Maximum state space:', len(allPos)
         initSet = [self.sprite2state(self.avatar)]
         self.states = sorted(flood(self.tryMoves, allPos, initSet))
         dim = len(self.states)        
@@ -108,7 +109,13 @@ class MDPconverter(object):
             pos = (state[0], state[1])
         else:
             pos = state
-        return [(a[0]+pos[0], a[1]+pos[1]) for a in self.actions]
+        ns = [(a[0]+pos[0], a[1]+pos[1]) for a in self.actions]
+        if self.oriented:
+            # subjective perspective, so we rotate the view according to the current orientation
+            ns = listRotate(ns, BASEDIRS.index(state[2]))
+            return ns
+        else:
+            return ns
     
     def sprite2state(self, s):
         pos = self.rect2pos(s.rect)
