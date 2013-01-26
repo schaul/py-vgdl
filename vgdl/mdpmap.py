@@ -93,8 +93,12 @@ class MDPconverter(object):
         if observations:
             # one observation for current position and each of the 4 neighbors.
             fMap = zeros((len(obstypes)*5, dim))
-            for si, pos in enumerate(self.states):
-                for i, p in enumerate([pos]+self.stateNeighbors(pos)):
+            for si, state in enumerate(self.states):
+                if self.oriented:
+                    pos = (state[0], state[1])
+                else:
+                    pos = state 
+                for i, p in enumerate([pos]+self.stateNeighbors(state)):
                     for j, obs in enumerate(obstypes):
                         if p in obs:
                             fMap[j*5+i, si] = 1
