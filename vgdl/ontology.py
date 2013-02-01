@@ -242,6 +242,7 @@ class MovingAvatar(VGDLSprite):
     """ Default avatar, moves in the 4 cardinal directions. """
     color=WHITE    
     speed=1    
+    is_avatar=True
     def _readAction(self, game):        
         actions = self._readMultiActions(game)
         if actions:
