@@ -109,7 +109,7 @@ class VGDLParser(object):
             
 class BasicGame(object):
     """ This regroups all the components of a game's dynamics, after parsing. """    
-    MAX_SPRITES = 1000
+    MAX_SPRITES = 10000
     
     def __init__(self, block_size=10, frame_rate=20):
         self.block_size = block_size
@@ -266,6 +266,7 @@ class VGDLSprite(object):
     dirtyrects = []
     
     is_static= False
+    is_avatar= False
     color    = None
     cooldown = 0 # pause ticks in-between two moves 
     speed    = None   
@@ -319,7 +320,11 @@ class VGDLSprite(object):
         return (self.rect[0]-self.lastrect[0], self.rect[1]-self.lastrect[1])     
     
     def _draw(self, screen):
-        r = screen.fill(self.color, self.rect)
+        if self.is_avatar:
+            shrunk = self.rect.inflate(-self.rect.width/5, -self.rect.height/5)
+            r = screen.fill(self.color, shrunk)
+        else:
+            r = screen.fill(self.color, self.rect)
         VGDLSprite.dirtyrects.append(r)
         
     def _clear(self, screen, background, double=False):
