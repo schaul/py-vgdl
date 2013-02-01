@@ -42,6 +42,8 @@ class MDPconverter(object):
             obstypes = []
         for _, ss in self.game.sprite_groups.items():
             #find avatar
+            if len(ss) == 0:
+                continue
             if isinstance(ss[0], MovingAvatar):
                 self.avatar = ss[0]                
             elif observations:
