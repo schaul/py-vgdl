@@ -28,7 +28,7 @@ BasicGame
         structure > Immovable
             wall         > 
             wallmark     > color=ORANGE
-            floortile    > color=BLUE
+            floortile    > color=WHITE
             goal         > color=GREEN
             portalentry  > Portal color=BLUE stype=portalexit
             portalexit   > color=BROWN"""
