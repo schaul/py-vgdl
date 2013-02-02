@@ -1,5 +1,5 @@
 '''
-Maze-like games: find the exit in the minimal amount of time.
+A few simple layouts for maze-like games: find the exit in the minimal amount of time.
 
 @author: Tom Schaul
 '''
@@ -80,61 +80,26 @@ corridor2 = """
 wwwwwwwwwwwwww
 w        wwwww
 w   ww   wwwww
-w b ww b wwwww
+w m ww m wwwww
 w wwwwww wwwww
 w   ww   wwwww
 w  bww wwwwwww
 w      w    0w
 wwwwww1w   www
-w      w b www
-w  bww w wwwww
+w      w m www
+w  mww w wwwww
 w   ww   wwwww
 w wwwwww wwwww
-w   ww b wwwww
-w  bww   wwwww
+w   ww m wwwww
+w  mww   wwwww
 w        wwwww
 wwwwwwwwwwwwww
 """
         
-maze_game = """
-BasicGame 
-    SpriteSet         
-        wall   > Immovable 
-        goal   > Immovable color=GREEN
-        avatar > MovingAvatar
-    LevelMapping
-        w > wall
-        0 > goal
-        1 > avatar                    
-    InteractionSet
-        avatar wall   > stepBack
-        goal avatar   > killSprite                                
-    TerminationSet
-        SpriteCounter stype=goal   limit=0 win=True
-"""
 
-
-polarmaze_game = """
-BasicGame 
-    SpriteSet         
-        wall   > Immovable 
-        box    > Immovable color=ORANGE
-        goal   > Immovable color=GREEN
-        avatar > RotatingAvatar
-    LevelMapping
-        w > wall
-        b > box
-        0 > goal
-        1 > avatar                    
-    InteractionSet
-        avatar wall   > stepBack
-        avatar box    > stepBack
-        goal avatar   > killSprite                                
-    TerminationSet
-        SpriteCounter stype=goal   limit=0 win=True
-"""
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
+    from mazegames import polarmaze_game, maze_game
     VGDLParser.playGame(polarmaze_game, corridor2)
     VGDLParser.playGame(polarmaze_game, office_layout_2)
     VGDLParser.playGame(maze_game, maze_level_1)
