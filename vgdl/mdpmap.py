@@ -40,10 +40,12 @@ class MDPconverter(object):
     def convert(self, observations=True):
         if observations:
             obstypes = []
-        for _, ss in self.game.sprite_groups.items():
+        for skey, ss in sorted(self.game.sprite_groups.items())[::-1]:
             #find avatar
             if len(ss) == 0:
                 continue
+            if self.verbose:
+                print skey, len(ss)
             if isinstance(ss[0], MovingAvatar):
                 self.avatar = ss[0]                
             elif observations:
