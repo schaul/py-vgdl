@@ -176,8 +176,9 @@ class SubjectiveGame(GameEnvironment):
 
     def performAction(self, action):
         GameEnvironment.performAction(self, action)
-        self._drawState()
-        pygame.time.wait(self._actionDelay)
+        if action is not None:
+            self._drawState()
+            pygame.time.wait(self._actionDelay)
         
     def _nearTileIncrements(self):
         p0, p1, orient = self.getState()
@@ -207,17 +208,17 @@ class SubjectiveGame(GameEnvironment):
         for oname, ps in self._obstypes.items():
             b = (oname in blocky)
             col = self._obscols[oname]
-            print oname, b, col
+            #print oname, b, col
             for iswall, fid, pos in self._nearTileIncrements():
                 if pos in ps:
                     if iswall:
-                        print 'w', fid, pos
+                        #print 'w', fid, pos
                         self.screen._colorWall(fid, col)
                     elif not b:
-                        print 'f', fid, pos
+                        #print 'f', fid, pos
                         self.screen._colorFloor(fid, col)
                     else:
-                        print 'b', fid, pos
+                        #print 'b', fid, pos
                         self.screen._colorBlock(fid, col)
         pygame.display.flip()  
         
@@ -269,9 +270,21 @@ def test2():
     senv = SubjectiveGame(g, actionDelay=1500)
     senv.rollOut(actions)
        
-
-
-
+def test3():
+    from examples.gridphysics.mazes import polarmaze_game, maze_level_1
+    from core import VGDLParser
+    from pybrain.rl.experiments.episodic import EpisodicExperiment
+    from interfaces import GameTask, InteractiveAgent    
+    game_str, map_str = polarmaze_game, maze_level_1
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)    
+    senv = SubjectiveGame(g, actionDelay=100)
+    task = GameTask(senv)    
+    iagent = InteractiveAgent()
+    exper = EpisodicExperiment(task, iagent)
+    exper.doEpisodes(1)
+    
 if  __name__ == "__main__":   
     #test1()
-    test2()
+    #test2()
+    test3()

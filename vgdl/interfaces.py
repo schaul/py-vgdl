@@ -12,7 +12,8 @@ import pygame
 
 from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
-
+from pybrain.rl.agents.agent import Agent
+    
 from ontology import MovingAvatar, RotatingAvatar, BASEDIRS
 from core import VGDLSprite
 from vgdl.tools import listRotate
@@ -131,7 +132,9 @@ class GameEnvironment(Environment):
         return [(state in ostates) for _, ostates in sorted(self._obstypes.items())[::-1]]
 
     def performAction(self, action, onlyavatar=False):
-        """ Action is an index for the actionset.  """   
+        """ Action is an index for the actionset.  """
+        if action is None:
+            return   
         # take action and compute consequences
         self._avatar._readMultiActions = lambda * x: [self._actionset[action]]        
 
@@ -197,6 +200,21 @@ class GameTask(EpisodicTask):
         return self._ended
 
 
+class InteractiveAgent(Agent):
+    """ Reading key commands from the user. """
+       
+    def getAction(self):
+        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
+        from ontology import RIGHT, LEFT, UP, DOWN
+        pygame.event.pump()
+        keystate = pygame.key.get_pressed()    
+        res = None
+        if   keystate[K_RIGHT]: res = BASEDIRS.index(RIGHT)
+        elif keystate[K_LEFT]:  res = BASEDIRS.index(LEFT)
+        elif   keystate[K_UP]:    res = BASEDIRS.index(UP)
+        elif keystate[K_DOWN]:  res = BASEDIRS.index(DOWN)
+        return res
+
 
 def testRollout(actions=[0, 0, 2, 2, 0, 3] * 20):        
     from examples.gridphysics.mazes import polarmaze_game, maze_level_1
@@ -210,7 +228,6 @@ def testRollout(actions=[0, 0, 2, 2, 0, 3] * 20):
     
 def testInteractions():
     from random import randint
-    from pybrain.rl.agents.agent import Agent
     from pybrain.rl.experiments.episodic import EpisodicExperiment
     from core import VGDLParser
     from examples.gridphysics.mazes import polarmaze_game, maze_level_1
