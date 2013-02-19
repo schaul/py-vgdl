@@ -10,12 +10,12 @@ Optional: small cheat screen gives the global view.
 
 import pygame
 
-from ontology import LIGHTGRAY, GRAY, BASEDIRS, RED
+from ontology import DARKGRAY, BASEDIRS, RED
 from tools import squarePoints
 from interfaces import GameEnvironment
 
-backscale = 0.3
-midscale = 0.45
+backscale = 0.4
+midscale = 0.65
 frontscale = 5
 # 4 corners 
 knownPolygons = {'center-back':squarePoints((0, 0), backscale),
@@ -75,11 +75,11 @@ knownPolygons = {'center-back':squarePoints((0, 0), backscale),
                  'left-front-floor':[(-1.5 * frontscale, 0.5 * frontscale),
                                    (-1.5 * midscale, 0.5 * midscale),
                                    (-0.5 * midscale, 0.5 * midscale),
-                                   (-0.5 * frontscale, 0.5 * frontscale)],                    
+                                   (-0.5 * frontscale, 0.5 * frontscale)],
                  'center-front-floor':[(0.5 * frontscale, 0.5 * frontscale),
                                    (0.5 * midscale, 0.5 * midscale),
                                    (-0.5 * midscale, 0.5 * midscale),
-                                   (-0.5 * frontscale, 0.5 * frontscale)],                 
+                                   (-0.5 * frontscale, 0.5 * frontscale)],
                  }
 
 
@@ -112,11 +112,11 @@ class SubjectiveSceen(object):
     avatar, while inside the game. """
     
     def __init__(self):
-        self.width = 700
-        self.height = 450
+        self.width = 750
+        self.height = 350
 
     def _drawPolygon(self, ps, col):
-        scaled = [(p[0] * self.height + self.width / 2, 
+        scaled = [(p[0] * self.height + self.width / 2,
                    p[1] * self.height + self.height / 2) for p in ps]
         pygame.draw.polygon(self.screen, col, scaled)
         
@@ -133,6 +133,7 @@ class SubjectiveSceen(object):
         
     def _colorWall(self, wid, col):
         """ color one of the 7 far walls. """
+        col = tuple([c/3 for c in col])
         self._drawPolygon(wallLocations[wid], col)
         pygame.display.flip()
         
@@ -146,7 +147,7 @@ class SubjectiveSceen(object):
     def reset(self):
         self.screen.blit(self.background, (0, 0))
         for ps in wallLocations.values():
-            self._drawPolygon(ps, LIGHTGRAY) 
+            self._drawPolygon(ps, DARKGRAY) 
         for ps in floorLocations.values():
             self._drawPolygon(ps, RED) 
         pygame.display.flip()
@@ -180,16 +181,23 @@ class SubjectiveGame(GameEnvironment):
         
     def _nearTileIncrements(self):
         p0, p1, orient = self.getState()
-        (o0, o1) = orient
-        leftor = BASEDIRS[(BASEDIRS.index(orient)-1) % len(BASEDIRS)]
-        rightor = BASEDIRS[(BASEDIRS.index(orient)-1) % len(BASEDIRS)]
+        o0, o1 = orient
+        l0, l1 = BASEDIRS[(BASEDIRS.index(orient) + 1) % len(BASEDIRS)]
+        r0, r1 = BASEDIRS[(BASEDIRS.index(orient) - 1) % len(BASEDIRS)]
         
-        res = [(False, 6, (p0,p1)),
-               (False, 1, (p0+leftor[0],p1+leftor[1])),
-               (False, 2, (p0+o0+leftor[0],p1+o1+leftor[1])),
-               (False, 3, (p0+o0,p1+o1)),
-               (False, 4, (p0+o0+rightor[0],p1+o1+rightor[1])),
-               (False, 5, (p0+rightor[0],p1+rightor[1])),
+        res = [(True, 1, (p0 + 2 * l0, p1 + 2 * l1)),
+               (True, 2, (p0 + o0 + 2 * l0, p1 + o1 + 2 * l1)),
+               (True, 3, (p0 + 2 * o0 + l0, p1 + 2 * o1 + l1)),
+               (True, 4, (p0 + 2 * o0, p1 + 2 * o1)),
+               (True, 5, (p0 + 2 * o0 + r0, p1 + 2 * o1 + r1)),
+               (True, 6, (p0 + o0 + 2 * r0, p1 + o1 + 2 * r1)),
+               (True, 7, (p0 + 2 * r0, p1 + 2 * r1)),
+               (False, 2, (p0 + o0 + l0, p1 + o1 + l1)),
+               (False, 4, (p0 + o0 + r0, p1 + o1 + r1)),
+               (False, 3, (p0 + o0, p1 + o1)),
+               (False, 1, (p0 + l0, p1 + l1)),
+               (False, 5, (p0 + r0, p1 + r1)),
+               (False, 6, (p0, p1)),
                ]
         return res
         
@@ -253,12 +261,17 @@ def test2():
     game_str, map_str = polarmaze_game, maze_level_1
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)    
-    senv = SubjectiveGame(g, actionDelay=500)
-    senv.rollOut([3,3,0,0,1,1,1,0,0,0,0])
+    actions = [1, 0, 0, 3, 0, 2, 0, 2, 0, 0, 0]
     
+    #env = GameEnvironment(g, visualize=True, actionDelay=100)
+    #env.rollOut(actions)
+    #env.reset()
+    senv = SubjectiveGame(g, actionDelay=1500)
+    senv.rollOut(actions)
+       
 
 
 
-if  __name__ == "__main__":
+if  __name__ == "__main__":   
     #test1()
     test2()
