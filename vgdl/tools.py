@@ -42,6 +42,12 @@ def triPoints(rect, orientation):
            p2[1]+orthdir[1]*rect.size[1]/6.)    
     return [(p[0], p[1]) for p in [p1, p2a, p2b]]
 
+def squarePoints(center, size):
+    return [(center[0]+size/2, center[1]+size/2),
+            (center[0]+size/2, center[1]-size/2),
+            (center[0]-size/2, center[1]-size/2),
+            (center[0]-size/2, center[1]+size/2)]
+    
 
 class Node(object):
     """ Lightweight indented tree structure, with automatic insertion at the right spot. """
