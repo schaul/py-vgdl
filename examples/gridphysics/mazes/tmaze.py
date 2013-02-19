@@ -21,14 +21,14 @@ Tmaze_game = commonmaze_game +"""
 
 def tmaze(length):
     s =      "wwwwwwwww\n"
-    s +=     "w0 4wm3ww\n"
+    s +=     "w0 4w2 0w\n"
     for _ in range(length-1):
         s += "ww www ww\n"
-    s +=     "wm3ww0 2w\n"
+    s +=     "wm3www3mw\n"
     s +=     "wwwwwwwww\n"
     return s
 
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(polarTmaze_game, tmaze(8))    
+    VGDLParser.playGame(polarTmaze_game, tmaze(4))    
