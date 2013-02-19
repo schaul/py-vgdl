@@ -5,7 +5,7 @@ Created on 2013 2 18
 
 Wrappers for games to interface them with artificial players.
 
-These are based on the PyBrain RL framework of environment and Task classes.
+These are based on the PyBrain RL framework of Environment and Task classes.
 '''
 
 from numpy import zeros
@@ -22,8 +22,9 @@ from vgdl.tools import listRotate
 
 class GameEnvironment(Environment):
     
-    def __init__(self, game, actionset=BASEDIRS, visualize=False):
+    def __init__(self, game, actionset=BASEDIRS, visualize=False, actionDelay=0):
         self.visualize = visualize
+        self._actionDelay = actionDelay
         self._game = game
         self._actionset = actionset
         self._obstypes = {}
@@ -147,7 +148,8 @@ class GameEnvironment(Environment):
             self._game._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
             VGDLSprite.dirtyrects = []
-        
+            pygame.time.wait(self._actionDelay)                  
+
         
     def _isDone(self):
         # remember reward if the final state ends the game
@@ -182,69 +184,6 @@ class GameTask(EpisodicTask):
 
 
 
-
-from pybrain.rl.agents.agent import Agent
-from random import randint
-
-class DummyAgent(Agent):
-    total = 4
-    
-    def getAction(self):
-        res =  randint(0, self.total-1)
-        return res
-    
-    
-def testInteractions():
-    from examples.gridphysics.mazes import * #@UnusedWildImport
-    from core import VGDLParser
-    game_str, map_str = polarmaze_game, maze_level_1
-    g = VGDLParser().parseGame(game_str)
-    g.buildLevel(map_str)
-    
-    env = GameEnvironment(g)
-    task = GameTask(env)
-    agent = DummyAgent()
-    exper = EpisodicExperiment(task, agent)
-    res = exper.doEpisodes(2)
-    print res
-
-
-def visualGameExperiment(game, agent, episodes=1):    
-    env = GameEnvironment(game)
-    task = GameTask(env)
-    
-    game._initScreen(game.screensize)
-    game.kill_list=[]
-    pygame.display.flip()
-    
-    for ep in range(episodes):
-        task.reset()
-        print ep
-        while not task.isFinished():
-            game._clearAll()            
-            agent.integrateObservation(task.getObservation())
-            task.performAction(agent.getAction())                
-            game._drawAll()                            
-            pygame.display.update(VGDLSprite.dirtyrects)
-            VGDLSprite.dirtyrects = []
-            agent.giveReward(task.getReward())
-            pygame.time.wait(50)  
-                
-        if task.cumreward > 0:
-            print "Dude, you're a born winner!"
-        else:
-            print "Dang. Try again..."            
-        pygame.time.wait(50)  
-
-def testVisual():
-    from examples.gridphysics.mazes import * #@UnusedWildImport
-    from core import VGDLParser
-    game_str, map_str = polarmaze_game, maze_level_1
-    g = VGDLParser().parseGame(game_str)
-    g.buildLevel(map_str)
-    agent = DummyAgent()
-    visualGameExperiment(g, agent, episodes=2)
-    
 def showRollout(actions = [0,0,2,2,0,3]*20):        
     from examples.gridphysics.mazes import * #@UnusedWildImport
     from core import VGDLParser
@@ -260,7 +199,33 @@ def showRollout(actions = [0,0,2,2,0,3]*20):
         task.performAction(a)
         pygame.time.wait(100)
     
+
+
+
+from pybrain.rl.agents.agent import Agent
+from random import randint
+
+class DummyAgent(Agent):
+    total = 4
+    def getAction(self):
+        res =  randint(0, self.total-1)
+        return res    
+    
+def testInteractions():
+    from examples.gridphysics.mazes import * #@UnusedWildImport
+    from core import VGDLParser
+    game_str, map_str = polarmaze_game, maze_level_1
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)
+    
+    env = GameEnvironment(g, visualize=True, actionDelay=100)
+    task = GameTask(env)
+    agent = DummyAgent()
+    exper = EpisodicExperiment(task, agent)
+    res = exper.doEpisodes(2)
+    print res
+
+    
 if __name__ == "__main__":
-    #testInteractions()
-    #testVisual()
-    showRollout()
+    testInteractions()
+    #showRollout()
