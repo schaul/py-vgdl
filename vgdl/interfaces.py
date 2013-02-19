@@ -10,17 +10,20 @@ These are based on the PyBrain RL framework of environment and Task classes.
 
 from numpy import zeros
 
+import pygame    
 from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
+from pybrain.rl.experiments.episodic import EpisodicExperiment
+
 from ontology import MovingAvatar, RotatingAvatar, BASEDIRS
 from core import VGDLSprite
 from vgdl.tools import listRotate
-from pybrain.rl.experiments.episodic import EpisodicExperiment
 
 
 class GameEnvironment(Environment):
     
-    def __init__(self, game, actionset=BASEDIRS):
+    def __init__(self, game, actionset=BASEDIRS, visualize=False):
+        self.visualize = visualize
         self._game = game
         self._actionset = actionset
         self._obstypes = {}
@@ -41,7 +44,14 @@ class GameEnvironment(Environment):
         self._initstate = self.getState()
         ns = self._stateNeighbors(self._initstate)
         self.outdim = (len(ns)+1) * len(self._obstypes)
-        
+        self.reset()        
+    
+    def reset(self):
+        self.setState(self._initstate)
+        self._game.kill_list=[]
+        if self.visualize:
+            self._game._initScreen(self._game.screensize)
+            pygame.display.flip()    
     
     def _sprite2state(self, s, oriented=None):
         pos = self._rect2pos(s.rect)
@@ -106,20 +116,37 @@ class GameEnvironment(Environment):
         ns = [pos] + self._stateNeighbors(s)
         for i,n in enumerate(ns):
             os = self._rawSensor(n)
-            print res, i, len(os), os
             res[i::len(ns)] = os
         return res
     
     def _rawSensor(self, state):
         return [(state in ostates) for _, ostates in sorted(self._obstypes.items())]
 
-    def performAction(self, action):
+    def performAction(self, action, onlyavatar=False):
         """ Action is an index for the actionset.  """   
         # take action and compute consequences
         self._avatar._readMultiActions = lambda *x: [self._actionset[action]]        
-        self._avatar.update(self._game)
+
+        if self.visualize:
+            self._game._clearAll()            
+
+        # update sprites 
+        if onlyavatar:
+            self._avatar.update(self._game)
+        else:
+            for s in self._game:
+                s.update(self._game)
+
+        # handle collision effects                
         self._game._updateCollisionDict()
         self._game._eventHandling()
+        
+        # update screen
+        if self.visualize:
+            self._game._drawAll()                            
+            pygame.display.update(VGDLSprite.dirtyrects)
+            VGDLSprite.dirtyrects = []
+        
         
     def _isDone(self):
         # remember reward if the final state ends the game
@@ -130,8 +157,6 @@ class GameEnvironment(Environment):
                 return ended, win
         return False, False
 
-    def reset(self):
-        self.setState(self._initstate)
     
 
 
@@ -157,21 +182,20 @@ class GameTask(EpisodicTask):
 
 
 
+from pybrain.rl.agents.agent import Agent
+from random import randint
+
+class DummyAgent(Agent):
+    total = 4
+    
+    def getAction(self):
+        res =  randint(0, self.total-1)
+        return res
+    
+    
 def testInteractions():
-    from pybrain.rl.agents.agent import Agent
-    from random import randint
     from examples.gridphysics.mazes import * #@UnusedWildImport
     from core import VGDLParser
-
-    class DummyAgent(Agent):
-        total = 4
-        
-        def getAction(self):
-            res =  randint(0, self.total-1)
-            print 'Doing', res
-            return res
-            
-                
     game_str, map_str = polarmaze_game, maze_level_1
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
@@ -184,37 +208,58 @@ def testInteractions():
     print res
 
 
-def visualGameExperiment(game):    
-    import pygame    
+def visualGameExperiment(game, agent, episodes=1):    
+    env = GameEnvironment(game)
+    task = GameTask(env)
+    
     game._initScreen(game.screensize)
     game.kill_list=[]
     pygame.display.flip()
-    ended = False
-    win = False
-    while not ended:
-        game._clearAll()            
-        # termination criteria
-        for t in game.terminations:
-            ended, win = t.isDone(game)
-            if ended:
-                break            
-        # update sprites 
-        for s in game:
-            s.update(game)                
-        # handle collision effects
-        game._updateCollisionDict()
-        game._eventHandling()
-        game._drawAll()                            
-        pygame.display.update(VGDLSprite.dirtyrects)
-        VGDLSprite.dirtyrects = []
-            
-    if win:
-        print "Dude, you're a born winner!"
-    else:
-        print "Dang. Try again..."            
-    pygame.time.wait(50)  
+    
+    for ep in range(episodes):
+        task.reset()
+        print ep
+        while not task.isFinished():
+            game._clearAll()            
+            agent.integrateObservation(task.getObservation())
+            task.performAction(agent.getAction())                
+            game._drawAll()                            
+            pygame.display.update(VGDLSprite.dirtyrects)
+            VGDLSprite.dirtyrects = []
+            agent.giveReward(task.getReward())
+            pygame.time.wait(50)  
+                
+        if task.cumreward > 0:
+            print "Dude, you're a born winner!"
+        else:
+            print "Dang. Try again..."            
+        pygame.time.wait(50)  
 
+def testVisual():
+    from examples.gridphysics.mazes import * #@UnusedWildImport
+    from core import VGDLParser
+    game_str, map_str = polarmaze_game, maze_level_1
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)
+    agent = DummyAgent()
+    visualGameExperiment(g, agent, episodes=2)
+    
+def showRollout(actions = [0,0,2,2,0,3]*20):        
+    from examples.gridphysics.mazes import * #@UnusedWildImport
+    from core import VGDLParser
+    game_str, map_str = polarmaze_game, maze_level_1
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)    
 
-
+    env = GameEnvironment(g, visualize=True)
+    task = GameTask(env)
+    for a in actions:
+        if task.isFinished():
+            break
+        task.performAction(a)
+        pygame.time.wait(100)
+    
 if __name__ == "__main__":
-    testInteractions()
+    #testInteractions()
+    #testVisual()
+    showRollout()
