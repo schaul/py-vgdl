@@ -22,17 +22,103 @@ from pybrain.utilities import flood
 from ontology import MovingAvatar, BASEDIRS, RotatingAvatar
 from core import VGDLSprite
 from tools import listRotate
+from interfaces import GameEnvironment
 
-    
 class MDPconverter(object):
+    """ Simplest case: Assume the game has a single avatar,
+        with 4 actions, outcomes are deterministic, physics are grid-based,
+        and all other sprites are Immovables 
+    """
+            
+    def __init__(self, game, verbose=False, actionset=BASEDIRS):
+        self.env = GameEnvironment(game,actionset=actionset)
+        self.verbose=verbose
+        self.sas_tuples = []
+        self.rewards = {}
+    
+    def convert(self, observations=True):
+        alls = self.env.allStates()
+        if self.verbose:
+            if observations:
+                print 'Number of features:', 5*len(self.env._obstypes)
+            print 'Maximum state space:', len(alls)
+        initSet = [self.env._initstate]
+        self.states = sorted(flood(self.tryMoves, alls, initSet))
+        dim = len(self.states)        
+        if self.verbose:
+            print 'Actual states:', dim
+            print 'Non-negative rewards:', self.rewards
+            print 'Initial state', initSet[0]
+        Ts = [zeros((dim, dim)) for _ in self.env.actionset]
+        R = zeros(dim)
+        statedic= {}
+        actiondic = {}        
+        for si, pos in enumerate(self.states):
+            statedic[pos] = si
+        for ai, a in enumerate(self.env.actionset):
+            actiondic[a] = ai
+        for pos, val in self.rewards.items():
+            R[statedic[pos]] += val
+        for pos, a, dest in self.sas_tuples:
+            ai = actiondic[a]
+            si = statedic[pos]
+            di = statedic[dest]
+            Ts[ai][si, di] += 1
+        if self.verbose:
+            print 'Built Ts.'
+        for T in Ts:
+            for row in T:  
+                row /= sum(row)
+        if self.verbose:
+            print 'Normalized Ts.'
+        if observations:
+            # one observation for current position and each of the 4 neighbors.
+            fMap = zeros((len(self.env._obstypes)*5, dim))
+            for si, state in enumerate(self.states):
+                fMap[:, si] = self.env.getSensors(state)                
+            if self.verbose:
+                print 'Built features.'        
+            return Ts, R, fMap
+        else:
+            return Ts, R
+        
+    def tryMoves(self, state):
+        res = []
+        for ai, a in enumerate(self.env.actionset):
+            # reset game to starting state
+            self.env.setState(state)
+            self.env.performAction(ai)
+            # remember the outcome of the action
+            dest = self.env.getState()
+            res.append(dest)
+            self.sas_tuples.append((state, a, dest))            
+            # remember reward if the final state ends the game
+            ended, win = self.env._isDone()
+            if ended:
+                if win:
+                    self.rewards[dest] = 1
+                else:
+                    self.rewards[dest] = -1
+        # pass on the list of neighboring states
+        return res
+        
+    
+    
+    
+    
+    
+    
+    
+class _obsolete_MDPconverter(object):
     """ Simplest case: Assume the game has a single avatar,
         with 4 actions, outcomes are deterministic, physics are grid-based,
         and all other sprites are Immovables. """
         
-    def __init__(self, game, verbose=False):
+        
+    def __init__(self, game, verbose=False, actions=BASEDIRS):
         self.game = game
         self.verbose=verbose
-        self.actions = BASEDIRS
+        self.actions = actions
         self.sas_tuples = []
         self.rewards = {}
         self.oriented = False

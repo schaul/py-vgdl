@@ -106,21 +106,22 @@ class GameEnvironment(Environment):
             return [(col, row) for row in range(self._game.height) 
                           for col in range(self._game.width)]  
     
-    def getSensors(self):
-        s = self.getState()
+    def getSensors(self, state=None):
+        if state is None:
+            state = self.getState()
         if self._oriented:
-            pos = (s[0], s[1])
+            pos = (state[0], state[1])
         else:
-            pos = s 
+            pos = state 
         res = zeros(self.outdim)
-        ns = [pos] + self._stateNeighbors(s)
+        ns = [pos] + self._stateNeighbors(state)
         for i,n in enumerate(ns):
             os = self._rawSensor(n)
             res[i::len(ns)] = os
         return res
     
     def _rawSensor(self, state):
-        return [(state in ostates) for _, ostates in sorted(self._obstypes.items())]
+        return [(state in ostates) for _, ostates in sorted(self._obstypes.items())[::-1]]
 
     def performAction(self, action, onlyavatar=False):
         """ Action is an index for the actionset.  """   
