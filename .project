@@ -3,6 +3,7 @@
 	<name>py-vgdl</name>
 	<comment></comment>
 	<projects>
+		<project>PyBrain-git-master</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
