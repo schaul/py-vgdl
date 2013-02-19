@@ -54,19 +54,19 @@ class MDPconverter(object):
                 obstypes.append(tmp)
         # what type of movement dynamics do we use?
         if isinstance(self.avatar, RotatingAvatar):
-            allPos = set([(col, row, dir_) for row in range(self.game.height) 
+            allStates = set([(col, row, dir_) for row in range(self.game.height) 
                           for col in range(self.game.width)
                           for dir_ in BASEDIRS])
             self.oriented = True
         else:
-            allPos = set([(col, row) for row in range(self.game.height) 
+            allStates = set([(col, row) for row in range(self.game.height) 
                           for col in range(self.game.width)])    
         if self.verbose:
             if observations:
                 print 'Number of features:', 5*len(obstypes)
-            print 'Maximum state space:', len(allPos)
-        initSet = [self.sprite2state(self.avatar)]
-        self.states = sorted(flood(self.tryMoves, allPos, initSet))
+            print 'Maximum state space:', len(allStates)
+        initSet = [self.getState()]
+        self.states = sorted(flood(self.tryMoves, allStates, initSet))
         dim = len(self.states)        
         if self.verbose:
             print 'Actual states:', dim
@@ -149,13 +149,16 @@ class MDPconverter(object):
     def setState(self, state):
         self.setSpriteState(self.avatar, state)
         self.game.kill_list = []   
-        VGDLSprite.update(self.avatar, self.game)            
+        VGDLSprite.update(self.avatar, self.game)           
+        
+    def getState(self):
+        return self.sprite2state(self.avatar)
     
-    def tryMoves(self, pos):
+    def tryMoves(self, state):
         res = []
         for a in self.actions:
             # reset game to starting state
-            self.setState(pos)
+            self.setState(state)
             # take action and compute consequences
             self.avatar._readMultiActions = lambda *x: [a]
             #self.avatar.physics.activeMovement(self.avatar, a)
@@ -163,16 +166,16 @@ class MDPconverter(object):
             self.game._updateCollisionDict()
             self.game._eventHandling()
             # remember the outcome of the action
-            dest = self.sprite2state(self.avatar)
+            dest = self.getState()
             res.append(dest)
-            self.sas_tuples.append((pos, a, dest))            
+            self.sas_tuples.append((state, a, dest))            
             # remember reward if the final state ends the game
             for t in self.game.terminations[1:]: 
                 # Convention: the first criterion is for keyboard-interrupt termination
                 ended, win = t.isDone(self.game)
                 if ended:
                     if self.verbose:
-                        print '    win', win, pos, a, dest
+                        print '    win', win, state, a, dest
                     if win:
                         self.rewards[dest] = 1
                     else:
