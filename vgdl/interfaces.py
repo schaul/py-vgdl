@@ -35,12 +35,12 @@ class GameEnvironment(Environment):
             if len(ss) == 0:
                 continue
             if isinstance(ss[0], MovingAvatar):
-                #find avatar
+                # find avatar
                 assert len(ss) == 1, 'Not supported: Only a single avatar can be used.'
                 self._avatar = ss[0]
                 assert issubclass(self._avatar.physicstype, GridPhysics), \
                                     'Not supported: Game must have grid physics, has %s'\
-                                    %(self._avatar.physicstype.__name__)   
+                                    % (self._avatar.physicstype.__name__)   
                 if isinstance(self._avatar, RotatingAvatar):
                     self._oriented = True
                 else:
@@ -173,7 +173,7 @@ class GameEnvironment(Environment):
                 return ended, win
         return False, False
 
-    def rollOut(self, action_sequence, init_state=None):
+    def rollOut(self, action_sequence, init_state=None, callback=lambda *_:None):
         """ Take a sequence of actions. """
         if init_state is not None:
             self.setState(init_state)
@@ -181,6 +181,7 @@ class GameEnvironment(Environment):
             if self._isDone()[0]:
                 break
             self.performAction(a)
+            callback(self)
         
 
 class GameTask(EpisodicTask):
@@ -220,6 +221,27 @@ class InteractiveAgent(Agent):
         return res
 
 
+def makeGifVideo(game, actions, prefix='seq_', duration=0.1, 
+                 outdir='../gifs/', tmpdir='../temp/'):
+    """ Generate an animated gif from a sequence of actions. """
+    from external_libs.images2gif import writeGif
+    import Image 
+    env = GameEnvironment(game, visualize=True)
+    env._counter = 1
+    res_images = []
+    astring = ''.join([str(a) for a in actions if a is not None])
+    
+    def cb(*_):
+        fn = tmpdir+"tmp%05d.png" %  env._counter
+        pygame.image.save(game.screen, fn)
+        res_images.append(Image.open(fn))
+        env._counter += 1
+        
+    env.rollOut(actions, callback=cb)
+    writeGif(outdir+prefix+'%s.gif' % astring, res_images, duration=duration, dither=0)
+    
+    
+
 def testRollout(actions=[0, 0, 2, 2, 0, 3] * 20):        
     from examples.gridphysics.mazes import polarmaze_game, maze_level_1
     from core import VGDLParser
@@ -228,6 +250,15 @@ def testRollout(actions=[0, 0, 2, 2, 0, 3] * 20):
     g.buildLevel(map_str)    
     env = GameEnvironment(g, visualize=True, actionDelay=100)
     env.rollOut(actions)
+        
+    
+def testRolloutVideo(actions=[0, 0, 2, 2, 0, 3] * 2):        
+    from examples.gridphysics.mazes import polarmaze_game, maze_level_1
+    from core import VGDLParser
+    game_str, map_str = polarmaze_game, maze_level_1
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)
+    makeGifVideo(g, actions)
     
     
 def testInteractions():
@@ -255,6 +286,7 @@ def testInteractions():
 
     
 if __name__ == "__main__":
-    #testRollout()
-    testInteractions()
+    # testRollout()
+    # testInteractions()
+    testRolloutVideo()
     
