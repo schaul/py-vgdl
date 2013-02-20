@@ -6,13 +6,13 @@ VGDL example: a simplified Zelda variant: Link has a sword, needs to get a key a
 
 zelda_level = """
 wwwwwwwwwwwww
-w1       w  w
+wA       w  w
 w  w        w
 w   w   w +ww
-www w2  wwwww
-w       w 0 w
-w 2        ww
-w     2    ww
+www w1  wwwww
+w       w G w
+w 1        ww
+w     1    ww
 wwwwwwwwwwwww
 """
 
@@ -20,7 +20,6 @@ wwwwwwwwwwwww
 zelda_game = """
 BasicGame 
     SpriteSet         
-        wall   > Immovable 
         goal   > Immovable color=GREEN
         key    > Immovable color=ORANGE
         sword  > Flicker limit=5  singleton=True
@@ -30,11 +29,10 @@ BasicGame
                 withkey    > color=ORANGE
             monster > RandomNPC    color=BROWN cooldown=2 speed=0.5
     LevelMapping
-        w > wall
-        0 > goal
+        G > goal
         + > key        
-        1 > withoutkey
-        2 > monster            
+        A > withoutkey
+        1 > monster            
     InteractionSet
         movable wall   > stepBack
         withoutkey goal> stepBack

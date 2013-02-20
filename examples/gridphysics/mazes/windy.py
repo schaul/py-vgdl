@@ -10,7 +10,7 @@ wwwwwwwwwwww
 w          w
 w   ...... w
 w   ...--. w
-w1  ...-0. w
+wA  ...-G. w
 w   ...--. w
 w   ...--. w
 w   ...--. w
@@ -21,27 +21,22 @@ wwwwwwwwwwww
 windymaze_game = """
 BasicGame 
     LevelMapping
-        w > wall
         . > lowwind
         - > highwind
-        0 > goal
-        1 > avatar
+        G > goal
         
     SpriteSet         
         structure > Immovable
-            wall         > 
             goal         > color=GREEN
             wind  > Conveyor orientation=UP
                 lowwind  > strength=1 color=LIGHTBLUE
                 highwind > strength=2 
-                 
-        avatar   > MovingAvatar
-
+        
     TerminationSet
         SpriteCounter stype=goal limit=0 win=True
         
     InteractionSet
-        avatar wall        > stepBack
+        avatar wall        > undoAll
         goal avatar        > killSprite"""
 
 windy_det_game = windymaze_game+"""

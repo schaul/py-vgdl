@@ -8,10 +8,8 @@ The "fovea" benchmark from our 2011 IJCAI paper. It only becomes interesting wit
 maze_game = """
 BasicGame 
     LevelMapping
-        w > wall
         . > floortile
-        0 > goal
-        1 > avatar
+        G > goal
         
     InteractionSet
         avatar wall        > stepBack
@@ -19,10 +17,8 @@ BasicGame
         
     SpriteSet         
         structure > Immovable
-            wall         > 
             floortile    > color=BLUE
             goal         > color=GREEN
-        avatar   > MovingAvatar
     TerminationSet
         SpriteCounter stype=goal limit=4 win=True
 """
@@ -31,15 +27,15 @@ fovea_floor = """
 wwwwwwwwwwwwwwwww
 w..    ..     . w
 w   ..      ..  w
-w..0 .1  . 0 . .w
+w..G .A  . G . .w
 w ... .. .    ..w
 w. . . . . .   .w
 w    .  . .     w
-w    . 0.  . .. w
+w    . G.  . .. w
 w.  .   . . . ..w
 w . .. .... ... w
 w .... .....  ..w
-w  0.. ..  0    w
+w  G.. ..  G    w
 w.  .  . . .  ..w
 w ....   ...... w
 w   .    . ... .w

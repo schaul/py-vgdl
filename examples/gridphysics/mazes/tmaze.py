@@ -13,7 +13,6 @@ polarTmaze_game = commonmaze_game +"""
 """
 
 Tmaze_game = commonmaze_game +"""
-        avatar   > MovingAvatar
     TerminationSet
         SpriteCounter stype=goal limit=1 win=True
 """
@@ -21,7 +20,7 @@ Tmaze_game = commonmaze_game +"""
 
 def tmaze(length):
     s =      "wwwwwwwww\n"
-    s +=     "w0 4w2 0w\n"
+    s +=     "wG 4w2 Gw\n"
     for _ in range(length-1):
         s += "ww www ww\n"
     s +=     "wm3www3mw\n"
