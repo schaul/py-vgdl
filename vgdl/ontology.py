@@ -62,20 +62,21 @@ class GridPhysics():
 class ContinuousPhysics(GridPhysics):
     gravity = 0.
     friction = 0.02    
-    def __init__(self, gridsize=None):
-        self.gridsize = (1,1)    
     
     def passiveMovement(self, sprite):
-        GridPhysics.passiveMovement(self, sprite) 
-        if self.gravity > 0 and sprite.mass >0:
-            self.activeMovement(sprite, (0, self.gravity*sprite.mass))        
-        sprite.speed *= (1-self.friction)
+        if sprite.speed != 0 and hasattr(sprite, 'orientation'):
+            sprite._updatePos(sprite.orientation, sprite.speed)   
+            if self.gravity > 0 and sprite.mass >0:
+                self.activeMovement(sprite, (0, self.gravity*sprite.mass))        
+            sprite.speed *= (1-self.friction)
             
-    def activeMovement(self, sprite, action):
+    def activeMovement(self, sprite, action, speed=None):
         """ Here the assumption is that the controls determine the direction of
         acceleration of the sprite. """
-        v1 = action[0]/float(sprite.mass) + sprite.orientation[0]*sprite.speed
-        v2 = action[1]/float(sprite.mass) + sprite.orientation[1]*sprite.speed
+        if speed is None:
+            speed = sprite.speed
+        v1 = action[0]/float(sprite.mass) + sprite.orientation[0]*speed
+        v2 = action[1]/float(sprite.mass) + sprite.orientation[1]*speed
         sprite.orientation = unitVector((v1, v2))        
         sprite.speed = vectNorm((v1, v2))/vectNorm(sprite.orientation)
         
@@ -549,8 +550,11 @@ def pullWithIt(sprite, partner, game):
     if not oncePerStep(sprite, game, 'lastpull'): 
         return
     tmp = sprite.lastrect
-    sprite._updatePos(partner.lastdirection, 1)
-    sprite.speed=0
+    v = unitVector(partner.lastdirection)
+    sprite._updatePos(v, partner.speed*sprite.physics.gridsize[0])
+    if isinstance(sprite.physics, ContinuousPhysics):
+        sprite.speed = partner.speed
+        sprite.orientation = partner.lastdirection
     sprite.lastrect = tmp
     
 def teleportToExit(sprite, partner, game):

@@ -24,7 +24,7 @@ def oncePerStep(sprite, game, name):
         # bounce only once per timestep, even if there are multiple collisions
         if sprite.__dict__[name] == game.time:
             return False
-    sprite.lastbounce = game.time
+    sprite.__dict__[name] = game.time
     return True
     
 def triPoints(rect, orientation):
