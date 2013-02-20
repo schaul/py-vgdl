@@ -17,20 +17,21 @@ Finally, we produce a set of features/observations. Two possibilities:
   - partially observable: generally from first-person avatar perspective
   
 """
+
 from scipy import zeros
 from pybrain.utilities import flood
-from ontology import MovingAvatar, BASEDIRS, RotatingAvatar
-from core import VGDLSprite
-from tools import listRotate
+from ontology import BASEDIRS
 from interfaces import GameEnvironment
+
 
 class MDPconverter(object):
     """ Simplest case: Assume the game has a single avatar,
-        with 4 actions, outcomes are deterministic, physics are grid-based,
-        and all other sprites are Immovables 
+        outcomes are deterministic, physics are grid-based,
+        and all other sprites are Immovables. 
     """
             
     def __init__(self, game, verbose=False, actionset=BASEDIRS):
+        assert not game.is_stochastic
         self.env = GameEnvironment(game,actionset=actionset)
         self.verbose=verbose
         self.sas_tuples = []
@@ -102,8 +103,7 @@ class MDPconverter(object):
         # pass on the list of neighboring states
         return res
         
-    
-    
+            
     
 def testMaze():
     from core import VGDLParser

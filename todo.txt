@@ -12,6 +12,5 @@ Example games:
 
 Other:
 - nicer graphics, possibly based on palettes
-- interface to artificial agents
 - full score system
 - homogeneous level descriptions
