@@ -7,7 +7,6 @@ VGDL example: a lunar lander variant.
 lander_game = """
 BasicGame
     SpriteSet 
-        wall   > Immovable
         pad    > Passive color=BLUE 
         avatar > InertialAvatar physicstype=GravityPhysics
             
@@ -20,23 +19,21 @@ BasicGame
         pad avatar  > killIfSlow    # relative velocity
         
     LevelMapping
-        w > wall
-        1 > avatar
-        2 > pad
+        G > pad
 """
 
 lander_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 w        w    w            w
-w    1    wwww             w
+w    A    wwww             w
 w                          w
 w                          w
 w                          w
 w                          w
 w                     www  w
 w                    wwww  w
-w       w        wwwwwwww22w
-w      wwwww222wwwwwwwwwwwww
+w       w        wwwwwwwwGGw
+w      wwwwwGGGwwwwwwwwwwwww
 w    wwwwwwwwwwwwwwwwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """

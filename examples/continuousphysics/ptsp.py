@@ -8,7 +8,6 @@ VGDL example: a simplified version the physical TSP benchmark.
 ptsp_game = """
 BasicGame
     SpriteSet    
-        wall   > Immovable
         pad    > Immovable color=BLUE 
         inertial > 
             avatar > InertialAvatar
@@ -24,24 +23,22 @@ BasicGame
         pad avatar    > killSprite
         
     LevelMapping
-        w > wall
-        1 > avatar
-        2 > pad
-        3 > bullet
+        G > pad
+        1 > bullet
 """
 
 ptsp_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 w        w    w    w       w
-w    1    wwww    www      w
+w    A    wwww    www      w
 w                   w     ww
-w             2     w  2   w
+w             G     w  G   w
 w   w                      w
-w    www   3            w  w
+w    www   1            w  w
 w      wwwwwww        www  w
 w                    ww    w
-w  2                  w    w
-w        ww  2           2 w
+w  G                  w    w
+w        ww  G           G w
 w     wwwwwwwwww           w
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
