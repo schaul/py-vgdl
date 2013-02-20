@@ -277,7 +277,7 @@ class VGDLSprite(object):
     mass     = 1
     physicstype=None
     
-    def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None):
+    def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None, **kwargs):
         self.rect = pygame.Rect(pos, size)
         self.lastrect = self.rect
         if physicstype is not None:
@@ -294,6 +294,11 @@ class VGDLSprite(object):
             self.color = color
         elif self.color is None:
             self.color = (choice(self.COLOR_DISC), choice(self.COLOR_DISC), choice(self.COLOR_DISC))
+        for name, value in kwargs.items():
+            if hasattr(self, name):
+                self.__dict__[name] = value
+            else:
+                print "WARNING: undefined parameter '%s' for sprite '%s'! "%(name, self.__class__.__name__)
         # how many timesteps ago was the last move?
         self.lastmove = 0        
         
