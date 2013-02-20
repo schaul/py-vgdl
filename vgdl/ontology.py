@@ -163,6 +163,8 @@ class OrientedSprite(VGDLSprite):
             pygame.draw.polygon(screen, col, triPoints(self.rect, unitVector(self.orientation)))
 
 class Conveyor(OrientedSprite):
+    """ A static object that used jointly with the 'conveySprite' interaction to move 
+    other sprites around."""
     is_static=True
     color = BLUE
     strength = 1
@@ -432,6 +434,14 @@ def conveySprite(sprite, partner, game):
     """ Moves the partner in target direction by some step size. """
     sprite.physics.activeMovement(sprite, unitVector(partner.orientation)*partner.strength)
     game._updateCollisionDict()
+
+def windGust(sprite, partner, game):
+    """ Moves the partner in target direction by some step size, but stochastically
+    (step, step-1 and step+1 are equally likely) """
+    s = choice([partner.strength, partner.strength+1, partner.strength-1])
+    if s != 0:
+        sprite.physics.activeMovement(sprite, unitVector(partner.orientation)*s)
+        game._updateCollisionDict()
     
 def turnAround(sprite, partner, game):
     sprite.rect=sprite.lastrect    

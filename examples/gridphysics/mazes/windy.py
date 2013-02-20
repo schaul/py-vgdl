@@ -37,17 +37,22 @@ BasicGame
                  
         avatar   > MovingAvatar
 
-    InteractionSet
-        avatar wall        > stepBack
-        goal avatar        > killSprite
-        avatar wind        > conveySprite
-
-    
     TerminationSet
         SpriteCounter stype=goal limit=0 win=True
+        
+    InteractionSet
+        avatar wall        > stepBack
+        goal avatar        > killSprite"""
+
+windy_det_game = windymaze_game+"""
+        avatar wind        > conveySprite
+"""
+windy_stoch_game = windymaze_game+"""
+        avatar wind        > windGust
 """
 
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(windymaze_game, windy_level)
+    VGDLParser.playGame(windy_det_game, windy_level)
+    VGDLParser.playGame(windy_stoch_game, windy_level)
