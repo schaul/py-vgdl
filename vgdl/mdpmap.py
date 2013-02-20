@@ -25,23 +25,27 @@ from interfaces import GameEnvironment
 
 
 class MDPconverter(object):
-    """ Simplest case: Assume the game has a single avatar,
-        outcomes are deterministic, physics are grid-based,
-        and all other sprites are Immovables. 
+    """ Simple case: Assume the game has a single avatar,
+        physics are grid-based, and all other sprites are Immovables. 
     """
             
-    def __init__(self, game, verbose=False, actionset=BASEDIRS):
-        assert not game.is_stochastic
-        self.env = GameEnvironment(game,actionset=actionset)
-        self.verbose=verbose
+    def __init__(self, game, verbose=False, actionset=BASEDIRS, avgOver=10):
+        self.env = GameEnvironment(game, actionset=actionset)
+        self.verbose = verbose
         self.sas_tuples = []
         self.rewards = {}
-    
+        
+        if game.is_stochastic:
+            # in the stochastic case, how often is every state-action pair tried?
+            self.avgOver = avgOver
+        else:
+            self.avgOver = 1
+            
     def convert(self, observations=True):
         alls = self.env.allStates()
         if self.verbose:
             if observations:
-                print 'Number of features:', 5*len(self.env._obstypes)
+                print 'Number of features:', 5 * len(self.env._obstypes)
             print 'Maximum state space:', len(alls)
         initSet = [self.env._initstate]
         self.states = sorted(flood(self.tryMoves, alls, initSet))
@@ -50,13 +54,13 @@ class MDPconverter(object):
             print 'Actual states:', dim
             print 'Non-negative rewards:', self.rewards
             print 'Initial state', initSet[0]
-        Ts = [zeros((dim, dim)) for _ in self.env.actionset]
+        Ts = [zeros((dim, dim)) for _ in self.env._actionset]
         R = zeros(dim)
-        statedic= {}
+        statedic = {}
         actiondic = {}        
         for si, pos in enumerate(self.states):
             statedic[pos] = si
-        for ai, a in enumerate(self.env.actionset):
+        for ai, a in enumerate(self.env._actionset):
             actiondic[a] = ai
         for pos, val in self.rewards.items():
             R[statedic[pos]] += val
@@ -64,7 +68,7 @@ class MDPconverter(object):
             ai = actiondic[a]
             si = statedic[pos]
             di = statedic[dest]
-            Ts[ai][si, di] += 1
+            Ts[ai][si, di] += 1. / self.avgOver
         if self.verbose:
             print 'Built Ts.'
         for T in Ts:
@@ -74,7 +78,7 @@ class MDPconverter(object):
             print 'Normalized Ts.'
         if observations:
             # one observation for current position and each of the 4 neighbors.
-            fMap = zeros((len(self.env._obstypes)*5, dim))
+            fMap = zeros((len(self.env._obstypes) * 5, dim))
             for si, state in enumerate(self.states):
                 fMap[:, si] = self.env.getSensors(state)                
             if self.verbose:
@@ -85,7 +89,7 @@ class MDPconverter(object):
         
     def tryMoves(self, state):
         res = []
-        for ai, a in enumerate(self.env.actionset):
+        for ai, a in self.avgOver * list(enumerate(self.env._actionset)):
             # reset game to starting state
             self.env.setState(state)
             self.env.performAction(ai)
@@ -103,11 +107,10 @@ class MDPconverter(object):
         # pass on the list of neighboring states
         return res
         
-            
-    
+                        
 def testMaze():
     from core import VGDLParser
-    from examples.gridphysics.mazes import * #@UnusedWildImport
+    from examples.gridphysics.mazes import polarmaze_game, maze_level_1
     game_str, map_str = polarmaze_game, maze_level_1
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
@@ -118,6 +121,21 @@ def testMaze():
     for T in Ts:
         print T
     print fMap
+
+def testStochMaze():
+    from core import VGDLParser
+    from examples.gridphysics.mazes.stochastic import stoch_game, stoch_level
+    g = VGDLParser().parseGame(stoch_game)
+    g.buildLevel(stoch_level)
+    C = MDPconverter(g, verbose=True)
+    Ts, R, fMap = C.convert()
+    print C.states
+    print R
+    for T in Ts:
+        print T
+    print fMap
+
     
 if __name__ == '__main__':
-    testMaze()
+    # testMaze()
+    testStochMaze()

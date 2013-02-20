@@ -14,14 +14,14 @@ from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
 from pybrain.rl.agents.agent import Agent
     
-from ontology import MovingAvatar, RotatingAvatar, BASEDIRS
+from ontology import MovingAvatar, RotatingAvatar, BASEDIRS, GridPhysics
 from core import VGDLSprite
-from vgdl.tools import listRotate
+from tools import listRotate
 
 
 class GameEnvironment(Environment):
     """ Wrapping a VGDL game into an environment class, where state can be read out directly
-    or set. Currently limited to single avatar games. 
+    or set. Currently limited to single avatar games, with gridphysics, where all other sprites are static. 
     
     If the visualization is enabled, all actions will be reflected on the screen."""
     def __init__(self, game, actionset=BASEDIRS, visualize=False, actionDelay=0):
@@ -36,8 +36,11 @@ class GameEnvironment(Environment):
                 continue
             if isinstance(ss[0], MovingAvatar):
                 #find avatar
-                assert len(ss) == 1 
+                assert len(ss) == 1, 'Not supported: Only a single avatar can be used.'
                 self._avatar = ss[0]
+                assert issubclass(self._avatar.physicstype, GridPhysics), \
+                                    'Not supported: Game must have grid physics, has %s'\
+                                    %(self._avatar.physicstype.__name__)   
                 if isinstance(self._avatar, RotatingAvatar):
                     self._oriented = True
                 else:
@@ -47,6 +50,7 @@ class GameEnvironment(Environment):
                 tmp = [self._sprite2state(sprite, oriented=False) for sprite in ss if sprite.is_static]
                 self._obstypes[skey] = tmp
                 self._obscols[skey] = ss[0].color
+                assert ss[0].is_static, "not supported: all non-avatar sprites must be static. "
         self._initstate = self.getState()
         ns = self._stateNeighbors(self._initstate)
         self.outdim = (len(ns) + 1) * len(self._obstypes)
