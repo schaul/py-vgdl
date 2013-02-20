@@ -120,7 +120,7 @@ class BasicGame(object):
         self.sprite_order  = [] 
         # contains instance lists
         self.sprite_groups = {}
-        # collision effects
+        # collision effects (ordered by execution order)
         self.collision_eff = []
         # for reading levels
         self.char_mapping = {}
@@ -129,7 +129,8 @@ class BasicGame(object):
         self.num_sprites = 0
         self.is_stochastic = False
     
-    def buildLevel(self, lstr):
+    def buildLevel(self, lstr):        
+        from ontology import stochastic_effects
         lines = [l for l in lstr.split("\n") if len(l)>0]
         lengths = map(len, lines)
         assert min(lengths)==max(lengths), "Inconsistent line lengths."
@@ -147,7 +148,9 @@ class BasicGame(object):
                     pos = (col*self.block_size, row*self.block_size)
                     self._createSprite(self.char_mapping[c], pos)
         self.kill_list=[]
-        
+        for _, _, effect, _ in self.collision_eff:
+            if effect in stochastic_effects:
+                self.is_stochastic = True                
                         
     def _createSprite(self, keys, pos):
         for key in keys:
@@ -311,7 +314,7 @@ class VGDLSprite(object):
             self.physics.passiveMovement(self)
         
     def _updatePos(self, orientation, speed=None):
-        if not speed:
+        if speed is None:
             speed = self.speed
         if not(self.cooldown > self.lastmove or abs(orientation[0])+abs(orientation[1])==0):
             self.rect = self.rect.move((orientation[0]*speed, orientation[1]*speed))

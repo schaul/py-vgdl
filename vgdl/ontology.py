@@ -48,11 +48,12 @@ class GridPhysics():
         if speed != 0 and hasattr(sprite, 'orientation'):
             sprite._updatePos(sprite.orientation, speed*self.gridsize[0])   
     
-    def activeMovement(self, sprite, action):
-        if sprite.speed is None:
-            speed=1
-        else:
-            speed=sprite.speed
+    def activeMovement(self, sprite, action, speed=None):
+        if speed is None:
+            if sprite.speed is None:
+                speed=1
+            else:
+                speed=sprite.speed
         if speed != 0 and action is not None:
             sprite._updatePos(action, speed*self.gridsize[0])
     
@@ -432,16 +433,36 @@ def bounceForward(sprite, partner, game):
 
 def conveySprite(sprite, partner, game):
     """ Moves the partner in target direction by some step size. """
-    sprite.physics.activeMovement(sprite, unitVector(partner.orientation)*partner.strength)
+    tmp = sprite.lastrect
+    v = unitVector(partner.orientation)
+    sprite.physics.activeMovement(sprite, v, speed=partner.strength)
+    sprite.lastrect = tmp
     game._updateCollisionDict()
-
+    
 def windGust(sprite, partner, game):
     """ Moves the partner in target direction by some step size, but stochastically
     (step, step-1 and step+1 are equally likely) """
     s = choice([partner.strength, partner.strength+1, partner.strength-1])
     if s != 0:
-        sprite.physics.activeMovement(sprite, unitVector(partner.orientation)*s)
+        tmp = sprite.lastrect
+        v = unitVector(partner.orientation)
+        sprite.physics.activeMovement(sprite, v, speed=s)
+        sprite.lastrect = tmp
         game._updateCollisionDict()
+        
+def slipForward(sprite, partner, game, prob=0.5):
+    """ Slip forward in the direction of the current orientation, sometimes."""
+    if prob > random():
+        tmp = sprite.lastrect        
+        v = unitVector(sprite.orientation)
+        sprite.physics.activeMovement(sprite, v, speed=1)
+        sprite.lastrect = tmp
+        game._updateCollisionDict()
+        
+def attractGaze(sprite, partner, game, prob=0.5):
+    """ Turn the orientation to the value given by the partner. """
+    if prob > random():
+        sprite.orientation = partner.orientation    
     
 def turnAround(sprite, partner, game):
     sprite.rect=sprite.lastrect    
@@ -534,3 +555,6 @@ def teleportToExit(sprite, partner, game):
     e = choice(game.sprite_groups[partner.stype])
     sprite.rect=e.rect       
     sprite.lastmove=0
+    
+# this allows us to determine whether the game has stochastic elements or not
+stochastic_effects = [teleportToExit, windGust, slipForward, attractGaze]
