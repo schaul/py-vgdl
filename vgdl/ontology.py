@@ -129,6 +129,7 @@ class SpawnPoint(SpriteProducer):
         SpriteProducer.__init__(self, **kwargs)
         if prob:
             self.prob  = prob
+            self.is_stochastic = (prob > 0 and prob < 1)
         if delay:
             self.delay = delay
         if total:
@@ -146,6 +147,8 @@ class SpawnPoint(SpriteProducer):
 class RandomNPC(VGDLSprite):
     """ Chooses randomly from all available actions each step. """    
     speed=1
+    is_stochastic = True
+    
     def update(self, game):
         VGDLSprite.update(self, game)
         self.physics.activeMovement(self, choice(BASEDIRS))    
@@ -175,6 +178,8 @@ class Missile(OrientedSprite):
 class Walker(Missile):
     """ Keep moving in the current horizontal direction. If stopped, pick one randomly. """
     airsteering=False
+    is_stochastic = True
+
     def __init__(self, airsteering=None, **kwargs):
         Missile.__init__(self, **kwargs)
         if airsteering is not None:   
@@ -199,6 +204,7 @@ class WalkJumper(Walker):
         Walker.__init__(self, **kwargs)
         if prob is not None:   
             self.prob=prob
+            self.is_stochastic = (prob > 0 and prob < 1)
         if strength is not None:
             self.strength = strength        
     
@@ -213,6 +219,7 @@ class RandomInertial(OrientedSprite, RandomNPC):
     physicstype=ContinuousPhysics    
         
 class RandomMissile(Missile):
+    is_stochastic = True
     def __init__(self, **kwargs):
         Missile.__init__(self, orientation=choice(BASEDIRS),
                          speed = choice([0.1, 0.2, 0.4]), **kwargs)
@@ -223,6 +230,7 @@ class ErraticMissile(Missile):
     def __init__(self, prob=0.1, **kwargs):
         Missile.__init__(self, orientation=choice(BASEDIRS), **kwargs)
         self.prob=prob
+        self.is_stochastic = (prob > 0 and prob < 1)
     
     def update(self, game):
         Missile.update(self, game)

@@ -127,6 +127,7 @@ class BasicGame(object):
         # termination criteria
         self.terminations = [Termination()]
         self.num_sprites = 0
+        self.is_stochastic = False
     
     def buildLevel(self, lstr):
         lines = [l for l in lstr.split("\n") if len(l)>0]
@@ -166,6 +167,8 @@ class BasicGame(object):
             s.name = key
             self.sprite_groups[key].append(s)
             self.num_sprites += 1
+            if s.is_stochastic:
+                self.is_stochastic = True
             
     def _initScreen(self, size):
         pygame.init()    
@@ -267,6 +270,7 @@ class VGDLSprite(object):
     
     is_static= False
     is_avatar= False
+    is_stochastic = False
     color    = None
     cooldown = 0 # pause ticks in-between two moves 
     speed    = None   
