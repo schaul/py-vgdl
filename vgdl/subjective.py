@@ -208,24 +208,19 @@ class SubjectiveGame(GameEnvironment):
         for oname, ps in self._obstypes.items():
             b = (oname in blocky)
             col = self._obscols[oname]
-            #print oname, b, col
             for iswall, fid, pos in self._nearTileIncrements():
                 if pos in ps:
                     if iswall:
-                        #print 'w', fid, pos
                         self.screen._colorWall(fid, col)
                     elif not b:
-                        #print 'f', fid, pos
                         self.screen._colorFloor(fid, col)
                     else:
-                        #print 'b', fid, pos
                         self.screen._colorBlock(fid, col)
         pygame.display.flip()  
         
 
 def test1():
-    from ontology import RED, GREEN, ORANGE, WHITE
-
+    from ontology import GREEN, ORANGE, WHITE
     s = SubjectiveSceen()
     s._initScreen()
     s._colorWall(3, RED)
@@ -263,10 +258,9 @@ def test2():
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)    
     actions = [1, 0, 0, 3, 0, 2, 0, 2, 0, 0, 0]
-    
-    #env = GameEnvironment(g, visualize=True, actionDelay=100)
-    #env.rollOut(actions)
-    #env.reset()
+    env = GameEnvironment(g, visualize=True, actionDelay=100)
+    env.rollOut(actions)
+    env.reset()
     senv = SubjectiveGame(g, actionDelay=1500)
     senv.rollOut(actions)
        
