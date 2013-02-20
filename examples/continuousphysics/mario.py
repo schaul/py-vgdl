@@ -12,9 +12,8 @@ BasicGame
             avatar > MarioAvatar airsteering=True
             evil   >  orientation=LEFT
                 goomba     > Walker     color=BROWN 
-                paratroopa > WalkJumper color=GREEN
+                paratroopa > WalkJumper color=RED
         goal > Immovable color=GREEN
-        wall > Immovable
             
     TerminationSet
         SpriteCounter stype=goal      win=True     
@@ -29,28 +28,26 @@ BasicGame
         elevator EOS    > wrapAround
         
     LevelMapping
-        w > wall
-        1 > avatar
-        2 > goal
-        3 > goomba
-        4 > paratroopa
+        G > goal
+        1 > goomba
+        2 > paratroopa
         = > elevator
 """
 
 mario_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 w                          w
-w                        23w
+w                        G1w
 w             ===       wwww
-w                     3    w
-w                w  4 ww   w
+w                     1    w
+w                w  2 ww   w
 w                wwwwwww   w
 w                          w
 w                          w
-w          4        4      w
+w          2        2      w
 w        www      wwwwww   w
-w 1      3   ===           w
-wwww   wwww        4       w
+w A      1   ===           w
+wwww   wwww        2       w
 wwwwwwwwww      wwww       w
 """
 
