@@ -11,7 +11,6 @@ If they all are freed, you lose.
 chase_game = """
 BasicGame
     SpriteSet    
-        wall   > Immovable
         cocoon > Immovable color=BLUE 
         animal > physicstype=GridPhysics
             avatar    > MovingAvatar 
@@ -28,23 +27,21 @@ BasicGame
         animal    wall   > stepBack        
         
     LevelMapping
-        w > wall
-        1 > avatar
-        2 > butterfly
-        3 > cocoon
+        1 > butterfly
+        0 > cocoon
 """
 
 chase_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
-w  2     2  w   3 3 3 3w333w
-w 2                    w333w
-w   2   3     1        w333w
-wwwwwwwwwwww             33w
-w3                  w     ww
-w3      2                  w
-w3         wwwww    2     3w
+w  1     1  w   0 0 0 0w000w
+w 1                    w000w
+w   1   0     A        w000w
+wwwwwwwwwwww             00w
+w0                  w     ww
+w0      1                  w
+w0         wwwww    1     0w
 wwwww                w     w
-w        3 3 3 3 3   w3   3w
+w        0 0 0 0 0   w0   0w
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 

@@ -8,15 +8,15 @@ Logs spawn randomly, but trucks wrap around the screen and come back.
 
 frog_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
-w           w2w            w
-w00==000000===0000=====000=4
-w0000====0000000000====00034
-w00===000===000====0000===04
+w           wGw            w
+w00==000000===0000=====000=2
+w0000====0000000000====00012
+w00===000===000====0000===02
 www   ww   www    www  wwwww
 w   ----   ---   -  ----   w
 w-     xxx       xxx    xx w
 w -   ---     -   ---- --  w
-w       1                  w
+w       A                  w
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 
@@ -51,12 +51,10 @@ BasicGame
         SpriteCounter stype=avatar limit=0 win=False
     
     LevelMapping
-        w > wall
+        G > goal
         0 > water
-        1 > avatar
-        2 > goal
-        3 > forest water       # note how a single character can spawn multiple sprites
-        4 > forest wall log
+        1 > forest water       # note how a single character can spawn multiple sprites
+        2 > forest wall log
         - > slowtruck
         x > fasttruck
         = > log water

@@ -6,7 +6,7 @@ VGDL example: a simple dodge-the-bullets game
 
 bullet_level = """
 wwwwwwwwwwwwwwwwwww
-w1  w  <  -      2w
+wA  w  <  -      Gw
 w   w-            w
 w            ww   w
 w   < w ^      w  w
@@ -32,8 +32,7 @@ BasicGame
                 downfast  >     orientation=DOWN  
         wall      > Immovable
         goal      > Immovable  color=GREEN
-        avatar    > MovingAvatar
-    
+        
     InteractionSet
         goal   avatar > killSprite
         avatar bullet > killSprite
@@ -45,15 +44,13 @@ BasicGame
         SpriteCounter stype=avatar limit=0 win=False
     
     LevelMapping
-        w > wall
         ^ > upslow
         < > leftslow
         v > downslow
         - > rightslow
         = > rightfast
         V > downfast
-        1 > avatar
-        2 > goal
+        G > goal
 """
 
 if __name__ == "__main__":

@@ -4,8 +4,26 @@ VGDL example: a simplified variant of the classic space-invaders.
 @author: Tom Schaul
 '''
 
-# The game dynamics are specified as a paragraph of text
 
+# the (initial) level as a block of characters 
+aliens_level = """
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+w                              w
+w1                             w
+w000                           w
+w000                           w
+w                              w
+w                              w
+w                              w
+w                              w
+w    000      000000     000   w
+w   00000    00000000   00000  w
+w   0   0    00    00   00000  w
+w                A             w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+"""
+
+# The game dynamics are specified as a paragraph of text
 aliens_game="""
 BasicGame
     SpriteSet
@@ -19,8 +37,7 @@ BasicGame
     
     LevelMapping
         0 > base
-        1 > avatar
-        2 > portal
+        1 > portal
 
     TerminationSet
         SpriteCounter      stype=avatar               limit=0 win=False
@@ -36,24 +53,6 @@ BasicGame
         avatar alien > killSprite
         avatar bomb  > killSprite
         alien  sam   > killSprite         
-"""
-
-# and the (initial) level as a block of characters too
-aliens_level = """
-wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
-w                              w
-w2                             w
-w000                           w
-w000                           w
-w                              w
-w                              w 
-w                              w
-w                              w
-w    000      000000     000   w
-w   00000    00000000   00000  w
-w   0   0    00    00   00000  w
-w                1             w
-wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 
 if __name__ == "__main__":

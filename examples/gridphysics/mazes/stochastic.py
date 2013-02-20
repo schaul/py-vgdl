@@ -6,13 +6,13 @@ Some stochastic environments, with wind, gaze-attractors, slippery ground, etc.
 
 stoch_level = """
 wwwwwwwwwwww
-w0        <w
+wG        <w
 w www<wwww w
 w----    w w
 www- ww<=w w
 w    w^== ^w
 w  ===== www
-w1 =======^w
+wA =======^w
 wwwwwwwwwwww
 """
 
@@ -20,24 +20,20 @@ wwwwwwwwwwww
 stoch_game = """
 BasicGame 
     LevelMapping
-        w > wall
         - > wind
         = > ice
-        0 > goal
-        1 > avatar
+        G > goal
         < > tvleft
         ^ > tvup
         
     SpriteSet         
         structure > Immovable
-            wall  > 
             goal  > color=GREEN
             tv    > Conveyor color=RED
                 tvup    > orientation=UP
                 tvleft  > orientation=LEFT
             ice   > color=WHITE
-            wind  > Conveyor orientation=RIGHT strength=1
-                                         
+            wind  > Conveyor orientation=RIGHT strength=1                                         
         avatar   > RotatingAvatar
 
     TerminationSet
@@ -48,8 +44,7 @@ BasicGame
         avatar wind  > windGust
         avatar tv    > attractGaze prob=1
         avatar ice   > slipForward prob=0.3
-        avatar wall  > stepBack
-        
+        avatar wall  > stepBack        
 """
 
 

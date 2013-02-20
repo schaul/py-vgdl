@@ -6,7 +6,7 @@ VGDL example: a simple teleport-and-avoid-fire game.
 
 portal_level = """
 wwwwwwwwwwwwwwwwwww
-w1  w  v  <  wO  2w
+wA  w  v  <  wO  Gw
 wo iw        wx   w
 wwwww      o wwwwww
 w     w r      w ow
@@ -21,28 +21,26 @@ wwwwwwwwwwwwwwwwwww
 portal_game = """
 BasicGame
     SpriteSet
-        bullet > color=ORANGE
+        bullet > color=RED
             sitting  > Immovable
             random   > RandomNPC speed=0.25
             straight > Missile   speed=0.5
                 vertical   > orientation=UP
                 horizontal > orientation=LEFT
         structure > Immovable            
-            wall  > 
             goal  > color=GREEN
-            portalentry > Portal color=BLUE
-                entry1 > stype=exit1 
-                entry2 > stype=exit2
+            portalentry > Portal 
+                entry1 > stype=exit1 color=LIGHTBLUE 
+                entry2 > stype=exit2 color=BLUE
             portalexit  > color=BROWN
-                exit1  >
-                exit2  >
-        avatar    > MovingAvatar
-    
+                exit1  > 
+                exit2  > 
     InteractionSet
         goal   avatar    > killSprite
         avatar bullet    > killSprite
         avatar wall      > stepBack
         random structure > stepBack
+        random wall      > stepBack
         straight wall    > reverseDirection
         avatar portalentry > teleportToExit
         
@@ -51,13 +49,11 @@ BasicGame
         SpriteCounter stype=avatar limit=0 win=False
     
     LevelMapping
-        w > wall
         < > horizontal
         v > vertical
         x > sitting
         r > random
-        1 > avatar
-        2 > goal
+        G > goal
         i > entry1
         I > entry2
         o > exit1

@@ -74,10 +74,11 @@ class VGDLParser(object):
                 if self.verbose:
                     print "Defining:", key, sclass, args, stypes 
                 self.game.sprite_constr[key] = (sclass, args, stypes)
-                self.game.sprite_groups[key] = []
+                if key in self.game.sprite_order:
+                    # last one counts
+                    self.game.sprite_order.remove(key)
                 self.game.sprite_order.append(key)
-            else:
-                #self.game.sprite_abstractgroups[key] = []                
+            else:              
                 self.parseSprites(sn.children, sclass, args, stypes)
        
     def parseMappings(self, mnodes):        
@@ -112,15 +113,24 @@ class BasicGame(object):
     """ This regroups all the components of a game's dynamics, after parsing. """    
     MAX_SPRITES = 10000
     
+    default_mapping = {'w': ['wall'],
+                       'A': ['avatar'],
+                       }
+    
     def __init__(self, block_size=10, frame_rate=20):
+        from ontology import Immovable, DARKGRAY, MovingAvatar
         self.block_size = block_size
         self.frame_rate = frame_rate
-        # contains mappings to constructor
-        self.sprite_constr = {}
+        # contains mappings to constructor (just a few defaults are known)
+        self.sprite_constr = {'wall': (Immovable, {'color': DARKGRAY}, ['wall']),
+                              'avatar': (MovingAvatar, {}, ['avatar']),
+                              }
         # z-level of sprite types (in case of overlap)  
-        self.sprite_order  = [] 
+        self.sprite_order  = ['wall', 
+                              'avatar',
+                              ] 
         # contains instance lists
-        self.sprite_groups = {}
+        self.sprite_groups = defaultdict(list)
         # collision effects (ordered by execution order)
         self.collision_eff = []
         # for reading levels
@@ -139,7 +149,7 @@ class BasicGame(object):
         self.height = len(lines)
         assert self.width > 1 and self.height > 1, "Level too small."
         # rescale pixels per block to adapt to the level        
-        self.block_size = max(1,int(400/max(self.width, self.height)))*2
+        self.block_size = max(2,int(800./max(self.width, self.height)))
         self.screensize = (self.width*self.block_size, self.height*self.block_size)
         
         # create sprites
@@ -148,10 +158,17 @@ class BasicGame(object):
                 if c in self.char_mapping:
                     pos = (col*self.block_size, row*self.block_size)
                     self._createSprite(self.char_mapping[c], pos)
+                elif c in self.default_mapping:
+                    pos = (col*self.block_size, row*self.block_size)
+                    self._createSprite(self.default_mapping[c], pos)
         self.kill_list=[]
         for _, _, effect, _ in self.collision_eff:
             if effect in stochastic_effects:
-                self.is_stochastic = True                
+                self.is_stochastic = True
+                        
+        # guarantee that avatar is always visible        
+        self.sprite_order.remove('avatar')
+        self.sprite_order.append('avatar')        
                         
     def _createSprite(self, keys, pos):
         for key in keys:
@@ -175,14 +192,20 @@ class BasicGame(object):
                 self.is_stochastic = True
             
     def _initScreen(self, size):
+        from ontology import LIGHTGRAY
         pygame.init()    
         self.screen = pygame.display.set_mode(size)
         self.background = pygame.Surface(size)
+        self.background.fill(LIGHTGRAY)
         self.screen.blit(self.background, (0,0))
+        
         
     def __iter__(self):
         """ Iterator over all sprites """
         for key in self.sprite_order:
+            if key not in self.sprite_groups:
+                # abstract type
+                continue
             for s in self.sprite_groups[key]:
                 yield s
                 
@@ -333,12 +356,12 @@ class VGDLSprite(object):
         return (self.rect[0]-self.lastrect[0], self.rect[1]-self.lastrect[1])     
     
     def _draw(self, screen):
-        from ontology import GREEN
+        from ontology import LIGHTGREEN
         if self.is_avatar:
             shrunk = self.rect.inflate(-self.rect.width/10., -self.rect.height/10.)
             rounded = roundedPoints(shrunk)
             pygame.draw.polygon(screen, self.color, rounded)
-            pygame.draw.lines(screen, GREEN, True, rounded, 3)
+            pygame.draw.lines(screen, LIGHTGREEN, True, rounded, 3)
             r = self.rect.copy()
         elif not self.is_static:
             rounded = roundedPoints(self.rect)
