@@ -138,7 +138,7 @@ class BasicGame(object):
         self.height = len(lines)
         assert self.width > 1 and self.height > 1, "Level too small."
         # rescale pixels per block to adapt to the level        
-        self.block_size = max(1,int(500/max(self.width, self.height)))*2
+        self.block_size = max(1,int(400/max(self.width, self.height)))*2
         self.screensize = (self.width*self.block_size, self.height*self.block_size)
         
         # create sprites
