@@ -8,6 +8,7 @@ import pygame
 from random import choice
 from tools import Node, indentTreeParser
 from collections import defaultdict
+from vgdl.tools import roundedPoints
  
 
 class VGDLParser(object):
@@ -332,9 +333,17 @@ class VGDLSprite(object):
         return (self.rect[0]-self.lastrect[0], self.rect[1]-self.lastrect[1])     
     
     def _draw(self, screen):
+        from ontology import GREEN
         if self.is_avatar:
-            shrunk = self.rect.inflate(-self.rect.width/5, -self.rect.height/5)
-            r = screen.fill(self.color, shrunk)
+            shrunk = self.rect.inflate(-self.rect.width/10., -self.rect.height/10.)
+            rounded = roundedPoints(shrunk)
+            pygame.draw.polygon(screen, self.color, rounded)
+            pygame.draw.lines(screen, GREEN, True, rounded, 3)
+            r = self.rect.copy()
+        elif not self.is_static:
+            rounded = roundedPoints(self.rect)
+            pygame.draw.polygon(screen, self.color, rounded)
+            r = self.rect.copy()
         else:
             r = screen.fill(self.color, self.rect)
         VGDLSprite.dirtyrects.append(r)
