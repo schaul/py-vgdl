@@ -16,12 +16,13 @@ GREEN   = (0,200,0)
 BLUE    = (0,0,200)
 RED     = (200,0,0)
 GRAY    = (90,90,90)
-LIGHTGRAY = (150,150,150)
-DARKGRAY  = (30,30,30)
 WHITE   = (250,250,250)
 BROWN   = (140, 120, 100)
 BLACK   = (0, 0, 0)
 ORANGE  = (250, 160, 0)
+LIGHTBLUE = (50,50,250)
+LIGHTGRAY = (150,150,150)
+DARKGRAY  = (30,30,30)
 
 UP     = (0, -1)
 DOWN   = (0,  1)
@@ -57,8 +58,7 @@ class GridPhysics():
     
 class ContinuousPhysics(GridPhysics):
     gravity = 0.
-    friction = 0.02
-    
+    friction = 0.02    
     def __init__(self, gridsize=None):
         self.gridsize = (1,1)    
     
@@ -78,7 +78,7 @@ class ContinuousPhysics(GridPhysics):
         
 class GravityPhysics(ContinuousPhysics):
     gravity = 0.5
-
+    
         
 # ---------------------------------------------------------------------
 #     Sprite types
@@ -89,7 +89,7 @@ class Immovable(VGDLSprite):
     """ A gray square that does not budge. """
     color = GRAY
     is_static = True
-    
+        
 class Passive(VGDLSprite):
     """ A square that may budge. """
     color = RED    
@@ -109,10 +109,8 @@ class Flicker(VGDLSprite):
         self.age += 1
         
 class SpriteProducer(VGDLSprite):
-    """ Superclass for all sprites that may produce other sprites, of type 'stype'. """    
-    def __init__(self, stype=None, **kwargs):
-        self.stype = stype
-        VGDLSprite.__init__(self, **kwargs)    
+    """ Superclass for all sprites that may produce other sprites, of type 'stype'. """ 
+    stype = None   
     
 class Portal(SpriteProducer):
     is_static = True
@@ -123,8 +121,7 @@ class SpawnPoint(SpriteProducer):
     delay = None
     total = None
     color = BLACK
-    is_static = True
-    
+    is_static = True    
     def __init__(self, delay=1, prob=1, total=None, **kwargs):
         SpriteProducer.__init__(self, **kwargs)
         if prob:
@@ -157,12 +154,6 @@ class OrientedSprite(VGDLSprite):
     """ A sprite that maintains the current orientation. """    
     draw_arrow  = False
     orientation = RIGHT    
-    def __init__(self, orientation=None, draw_arrow=None, **kwargs):
-        VGDLSprite.__init__(self, **kwargs)
-        if orientation is not None:   
-            self.orientation=orientation
-        if draw_arrow is not None:
-            self.draw_arrow = draw_arrow        
     
     def _draw(self, screen):
         """ With a triangle that shows the orientation. """
@@ -170,7 +161,13 @@ class OrientedSprite(VGDLSprite):
         if self.draw_arrow:
             col = (self.color[0], 255-self.color[1], self.color[2])
             pygame.draw.polygon(screen, col, triPoints(self.rect, unitVector(self.orientation)))
-            
+
+class Conveyor(OrientedSprite):
+    is_static=True
+    color = BLUE
+    strength = 1
+    draw_arrow=True
+    
 class Missile(OrientedSprite):
     """ A sprite that constantly moves in the same direction. """            
     speed = 1 
@@ -179,12 +176,6 @@ class Walker(Missile):
     """ Keep moving in the current horizontal direction. If stopped, pick one randomly. """
     airsteering=False
     is_stochastic = True
-
-    def __init__(self, airsteering=None, **kwargs):
-        Missile.__init__(self, **kwargs)
-        if airsteering is not None:   
-            self.airsteering=airsteering
-    
     def update(self, game):
         if self.airsteering or self.lastdirection[0] == 0:
             if self.orientation[0] > 0:
@@ -194,20 +185,12 @@ class Walker(Missile):
             else:
                 d = choice([-1, 1])
             self.physics.activeMovement(self, (d, 0))    
-        Missile.update(self, game)
-        
+        Missile.update(self, game)        
     
 class WalkJumper(Walker):
     prob = 0.1
     strength = 10
-    def __init__(self, prob=None, strength=None, **kwargs):
-        Walker.__init__(self, **kwargs)
-        if prob is not None:   
-            self.prob=prob
-            self.is_stochastic = (prob > 0 and prob < 1)
-        if strength is not None:
-            self.strength = strength        
-    
+    is_stochastic = True         
     def update(self, game):
         if self.lastdirection[0] == 0:
             if self.prob < random():
@@ -219,7 +202,6 @@ class RandomInertial(OrientedSprite, RandomNPC):
     physicstype=ContinuousPhysics    
         
 class RandomMissile(Missile):
-    is_stochastic = True
     def __init__(self, **kwargs):
         Missile.__init__(self, orientation=choice(BASEDIRS),
                          speed = choice([0.1, 0.2, 0.4]), **kwargs)
@@ -239,7 +221,7 @@ class ErraticMissile(Missile):
 
 class Bomber(SpawnPoint, Missile):
     color     = ORANGE
-    is_static = False
+    is_static = False    
     def update(self, game):
         Missile.update(self, game)
         SpawnPoint.update(self, game)
@@ -278,8 +260,7 @@ class MovingAvatar(VGDLSprite):
         
 class Frog(MovingAvatar):
     """ Has an additional flag that keeps if from drowning if true. """
-    drowning_safe = False
-    
+    drowning_safe = False    
     def update(self, game):
         MovingAvatar.update(self, game)
         self.drowning_safe = False
@@ -287,8 +268,7 @@ class Frog(MovingAvatar):
 class FlakAvatar(MovingAvatar, SpriteProducer):
     """ Only horizontal moves. Hitting the space button creates a sprite of the 
     specified type at its location. """
-    color=GREEN        
-    
+    color=GREEN            
     def update(self, game):
         VGDLSprite.update(self, game)        
         action = self._readAction(game)
@@ -300,7 +280,7 @@ class FlakAvatar(MovingAvatar, SpriteProducer):
             
 class OrientedAvatar(OrientedSprite, MovingAvatar):
     """ Avatar retains its orientation, but moves in cardinal directions. """
-    draw_arrow = True      
+    draw_arrow = True          
     def update(self, game):
         tmp = self.orientation
         self.orientation = (0,0)
@@ -319,8 +299,7 @@ class RotatingAvatar(OrientedSprite, MovingAvatar):
     """ Avatar retains its orientation, and moves forward/backward or rotates 
     relative to that. """
     draw_arrow = True      
-    speed = 0
-    
+    speed = 0    
     def update(self, game):
         actions = self._readMultiActions(game)
         if UP in actions:
@@ -362,13 +341,6 @@ class MarioAvatar(InertialAvatar):
     draw_arrow=False
     strength=10
     airsteering=False    
-    def __init__(self, strength=None, airsteering=None, **kwargs):
-        if airsteering is not None:
-            self.airsteering = airsteering
-        if strength is not None:
-            self.strength = strength
-        InertialAvatar.__init__(self, **kwargs)
-
     def update(self, game):
         action = self._readAction(game)
         if action is None:
@@ -454,6 +426,11 @@ def undoAll(sprite, partner, game):
 def bounceForward(sprite, partner, game):
     """ The partner sprite pushed, so if possible move in the opposite direction. """
     sprite.physics.activeMovement(sprite, unitVector(partner.lastdirection))
+    game._updateCollisionDict()
+
+def conveySprite(sprite, partner, game):
+    """ Moves the partner in target direction by some step size. """
+    sprite.physics.activeMovement(sprite, unitVector(partner.orientation)*partner.strength)
     game._updateCollisionDict()
     
 def turnAround(sprite, partner, game):
