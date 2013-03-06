@@ -18,12 +18,21 @@ from vgdl.tools import featurePlot
 
     
 def plotOptimalValues(gametype, layout, discountFactor=0.9):
+    # build the game
     g = VGDLParser().parseGame(gametype)
     g.buildLevel(layout)
+    
+    # transform into an MDP
     C = MDPconverter(g)
     Ts, R, _ = C.convert()
+    
+    # find the optimal policy
     _, Topt = policyIteration(Ts, R, discountFactor=discountFactor)
-    Vopt = trueValues(Topt, R, discountFactor=discountFactor)    
+    
+    # evaluate the policy
+    Vopt = trueValues(Topt, R, discountFactor=discountFactor)
+    
+    # plot those values    
     featurePlot((g.width, g.height), C.states, Vopt)
     
     
