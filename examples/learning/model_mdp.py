@@ -37,6 +37,7 @@ def plotOptimalValues(gametype, layout, discountFactor=0.9):
     
     
 def test1():
+    """ Simple maze """
     from examples.gridphysics.mazes.mazegames import maze_game
     from examples.gridphysics.mazes.simple import maze_level_2
     plotOptimalValues(maze_game, maze_level_2)
@@ -44,6 +45,7 @@ def test1():
 
     
 def test2():
+    """ Two mazes, two types of movement dynamics. """
     from examples.gridphysics.mazes.mazegames import maze_game, polarmaze_game
     from examples.gridphysics.mazes.simple import maze_level_2, office_layout_2
     pylab.subplot(2,2,1)
@@ -56,6 +58,14 @@ def test2():
     plotOptimalValues(polarmaze_game, office_layout_2)
     pylab.show()
     
+def test3():
+    """ Stochastic maze. """    
+    from examples.gridphysics.mazes.windy import windy_stoch_game, windy_level
+    plotOptimalValues(windy_stoch_game, windy_level)
+    pylab.show()
+
     
 if __name__ == '__main__':
+    #test1()
     test2()
+    #test3()

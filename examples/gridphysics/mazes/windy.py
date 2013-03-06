@@ -7,6 +7,7 @@ Here: a deterministic and a stochastic version.
 
 windy_level = """
 wwwwwwwwwwww
+wwwwwwwwwwww
 w          w
 w   ...... w
 w   ...--. w
