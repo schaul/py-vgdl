@@ -87,6 +87,9 @@ class MDPconverter(object):
         else:
             return Ts, R
         
+    def initIndex(self):
+        return self.states.index(self.env._initstate)
+        
     def tryMoves(self, state):
         res = []
         for ai, a in self.avgOver * list(enumerate(self.env._actionset)):

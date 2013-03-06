@@ -16,6 +16,8 @@ from vgdl.core import VGDLParser
 from vgdl.tools import featurePlot
 
 
+from matplotlib import rc
+rc('text', usetex=False)
     
 def plotOptimalValues(gametype, layout, discountFactor=0.9):
     # build the game
@@ -32,8 +34,12 @@ def plotOptimalValues(gametype, layout, discountFactor=0.9):
     # evaluate the policy
     Vopt = trueValues(Topt, R, discountFactor=discountFactor)
     
+    # expected discounted reward at initial state
+    Vinit = Vopt[C.initIndex()]
+    
     # plot those values    
     featurePlot((g.width, g.height), C.states, Vopt)
+    pylab.xlabel("V0=%.4f"%Vinit)
     
     
 def test1():
@@ -67,5 +73,5 @@ def test3():
     
 if __name__ == '__main__':
     #test1()
-    test2()
-    #test3()
+    #test2()
+    test3()
