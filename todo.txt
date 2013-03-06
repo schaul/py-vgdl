@@ -3,7 +3,7 @@ Game dynamics:
 - chasing NPCs
 - direction-based shooting
 - momentum-preserving splits
-- non-square sprites?
+- non-square sprites
 
 Example games:
 - pacman
@@ -13,4 +13,3 @@ Example games:
 Other:
 - nicer graphics, possibly based on palettes
 - full score system
-- homogeneous level descriptions
