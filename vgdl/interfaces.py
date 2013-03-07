@@ -342,7 +342,7 @@ def testPolicyAgent():
     res = exper.doEpisodes(2)
     print res
     
-def testRecordingToGif():
+def testRecordingToGif(human=False):
     from pybrain.rl.experiments.episodic import EpisodicExperiment
     from core import VGDLParser
     from examples.gridphysics.mazes import polarmaze_game, maze_level_2
@@ -350,9 +350,12 @@ def testRecordingToGif():
     game_str, map_str = polarmaze_game, maze_level_2
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
-    env = GameEnvironment(g, visualize=False, recordingEnabled=True)
+    env = GameEnvironment(g, visualize=human, recordingEnabled=True, actionDelay=200)
     task = GameTask(env)
-    agent = PolicyDrivenAgent.buildOptimal(env)
+    if human:
+        agent = InteractiveAgent()
+    else:
+        agent = PolicyDrivenAgent.buildOptimal(env)
     exper = EpisodicExperiment(task, agent)
     res = exper.doEpisodes(1)
     print res
@@ -365,6 +368,6 @@ if __name__ == "__main__":
     # testRollout()
     # testInteractions()
     #testRolloutVideo()
-    testPolicyAgent()
-    #testRecordingToGif()
+    #testPolicyAgent()
+    testRecordingToGif(human=True)
     
