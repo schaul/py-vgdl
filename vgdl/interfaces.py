@@ -14,7 +14,7 @@ from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
 from pybrain.rl.agents.agent import Agent
 from pybrain.rl.learners.modelbased import policyIteration
-from pybrain.utilities import drawIndex
+from pybrain.utilities import drawIndex, setAllArgs
 
 from ontology import MovingAvatar, RotatingAvatar, BASEDIRS, GridPhysics
 from core import VGDLSprite
@@ -24,11 +24,18 @@ from tools import listRotate
 class GameEnvironment(Environment):
     """ Wrapping a VGDL game into an environment class, where state can be read out directly
     or set. Currently limited to single avatar games, with gridphysics, where all other sprites are static. 
+    """
     
-    If the visualization is enabled, all actions will be reflected on the screen."""
-    def __init__(self, game, actionset=BASEDIRS, visualize=False, actionDelay=0):
-        self.visualize = visualize
-        self._actionDelay = actionDelay
+    # If the visualization is enabled, all actions will be reflected on the screen.
+    visualize = False
+    # In that case, optionally wait a few milliseconds between actions?
+    actionDelay = 0
+    
+    # Recording events (in slightly redundant format state-action-nextstate)
+    recordingEnabled = False
+    
+    def __init__(self, game, actionset=BASEDIRS, **kwargs):
+        setAllArgs(self, kwargs)
         self._game = game
         self._actionset = actionset
         self._obstypes = {}
@@ -64,6 +71,9 @@ class GameEnvironment(Environment):
         if self.visualize:
             self._game._initScreen(self._game.screensize)
             pygame.display.flip()    
+        if self.recordingEnabled:
+            self._last_state = self.getState()
+            self._allEvents = []            
     
     def _sprite2state(self, s, oriented=None):
         pos = self._rect2pos(s.rect)
@@ -163,9 +173,13 @@ class GameEnvironment(Environment):
             self._game._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
             VGDLSprite.dirtyrects = []
-            pygame.time.wait(self._actionDelay)                  
+            pygame.time.wait(self.actionDelay)                  
 
-        
+        if self.recordingEnabled:
+            self._previous_state = self._last_state
+            self._last_state = self.getState()
+            self._allEvents.append((self._previous_state, action, self._last_state))
+            
     def _isDone(self):
         # remember reward if the final state ends the game
         for t in self._game.terminations[1:]: 
@@ -244,15 +258,17 @@ class PolicyDrivenAgent(Agent):
         C = MDPconverter(game_env._game)
         Ts, R, _ = C.convert()
         policy, _ = policyIteration(Ts, R, discountFactor=discountFactor)
-        return PolicyDrivenAgent(policy, lambda *_: C.states.index(game_env.getState()))
+        return PolicyDrivenAgent(policy, lambda * _: C.states.index(game_env.getState()))
 
 
-def makeGifVideo(game, actions, prefix='seq_', duration=0.1,
+def makeGifVideo(game, actions, initstate=None, prefix='seq_', duration=0.1,
                  outdir='../gifs/', tmpdir='../temp/'):
     """ Generate an animated gif from a sequence of actions. """
     from external_libs.images2gif import writeGif
     import Image 
     env = GameEnvironment(game, visualize=True)
+    if initstate is not None:
+        env.setState(initstate)
     env._counter = 1
     res_images = []
     astring = ''.join([str(a) for a in actions if a is not None])
@@ -310,10 +326,6 @@ def testInteractions():
     res = exper.doEpisodes(2)
     print res
 
-
-
-
-
 def testPolicyAgent():
     from pybrain.rl.experiments.episodic import EpisodicExperiment
     from core import VGDLParser
@@ -330,9 +342,29 @@ def testPolicyAgent():
     res = exper.doEpisodes(2)
     print res
     
+def testRecordingToGif():
+    from pybrain.rl.experiments.episodic import EpisodicExperiment
+    from core import VGDLParser
+    from examples.gridphysics.mazes import polarmaze_game, maze_level_2
+        
+    game_str, map_str = polarmaze_game, maze_level_2
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)
+    env = GameEnvironment(g, visualize=False, recordingEnabled=True)
+    task = GameTask(env)
+    agent = PolicyDrivenAgent.buildOptimal(env)
+    exper = EpisodicExperiment(task, agent)
+    res = exper.doEpisodes(1)
+    print res
+    
+    actions = [a for _,a,_ in env._allEvents]
+    makeGifVideo(g, actions, initstate=env._initstate)
+    
+    
 if __name__ == "__main__":
     # testRollout()
     # testInteractions()
     #testRolloutVideo()
     testPolicyAgent()
+    #testRecordingToGif()
     
