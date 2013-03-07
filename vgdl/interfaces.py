@@ -13,7 +13,9 @@ import pygame
 from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
 from pybrain.rl.agents.agent import Agent
-    
+from pybrain.rl.learners.modelbased import policyIteration
+from pybrain.utilities import drawIndex
+
 from ontology import MovingAvatar, RotatingAvatar, BASEDIRS, GridPhysics
 from core import VGDLSprite
 from tools import listRotate
@@ -172,8 +174,10 @@ class GameEnvironment(Environment):
             if ended:
                 return ended, win
         return False, False
+    
+    
 
-    def rollOut(self, action_sequence, init_state=None, callback=lambda *_:None):
+    def rollOut(self, action_sequence, init_state=None, callback=lambda * _:None):
         """ Take a sequence of actions. """
         if init_state is not None:
             self.setState(init_state)
@@ -216,12 +220,34 @@ class InteractiveAgent(Agent):
         res = None
         if   keystate[K_RIGHT]: res = BASEDIRS.index(RIGHT)
         elif keystate[K_LEFT]:  res = BASEDIRS.index(LEFT)
-        elif   keystate[K_UP]:    res = BASEDIRS.index(UP)
+        elif keystate[K_UP]:    res = BASEDIRS.index(UP)
         elif keystate[K_DOWN]:  res = BASEDIRS.index(DOWN)
         return res
+    
+
+class PolicyDrivenAgent(Agent):
+    """ Taking actions according to a (possibly stochastic) policy that has 
+    full state information (state index). """
+    
+    def __init__(self, policy, stateIndexFun):
+        self.policy = policy
+        self.stateIndexFun = stateIndexFun
+    
+    def getAction(self):
+        return drawIndex(self.policy[self.stateIndexFun()])
+            
+    @staticmethod
+    def buildOptimal(game_env, discountFactor=0.9):
+        """ Given a game, find the optimal (state-based) policy and 
+        return an agent that is playing accordingly. """
+        from mdpmap import MDPconverter
+        C = MDPconverter(game_env._game)
+        Ts, R, _ = C.convert()
+        policy, _ = policyIteration(Ts, R, discountFactor=discountFactor)
+        return PolicyDrivenAgent(policy, lambda *_: C.states.index(game_env.getState()))
 
 
-def makeGifVideo(game, actions, prefix='seq_', duration=0.1, 
+def makeGifVideo(game, actions, prefix='seq_', duration=0.1,
                  outdir='../gifs/', tmpdir='../temp/'):
     """ Generate an animated gif from a sequence of actions. """
     from external_libs.images2gif import writeGif
@@ -232,13 +258,13 @@ def makeGifVideo(game, actions, prefix='seq_', duration=0.1,
     astring = ''.join([str(a) for a in actions if a is not None])
     
     def cb(*_):
-        fn = tmpdir+"tmp%05d.png" %  env._counter
+        fn = tmpdir + "tmp%05d.png" % env._counter
         pygame.image.save(game.screen, fn)
         res_images.append(Image.open(fn))
         env._counter += 1
         
     env.rollOut(actions, callback=cb)
-    writeGif(outdir+prefix+'%s.gif' % astring, res_images, duration=duration, dither=0)
+    writeGif(outdir + prefix + '%s.gif' % astring, res_images, duration=duration, dither=0)
     
     
 
@@ -284,9 +310,29 @@ def testInteractions():
     res = exper.doEpisodes(2)
     print res
 
+
+
+
+
+def testPolicyAgent():
+    from pybrain.rl.experiments.episodic import EpisodicExperiment
+    from core import VGDLParser
+    from examples.gridphysics.mazes import polarmaze_game, maze_level_2
+        
+    game_str, map_str = polarmaze_game, maze_level_2
+    g = VGDLParser().parseGame(game_str)
+    g.buildLevel(map_str)
+    
+    env = GameEnvironment(g, visualize=True, actionDelay=100)
+    task = GameTask(env)
+    agent = PolicyDrivenAgent.buildOptimal(env)
+    exper = EpisodicExperiment(task, agent)
+    res = exper.doEpisodes(2)
+    print res
     
 if __name__ == "__main__":
     # testRollout()
     # testInteractions()
-    testRolloutVideo()
+    #testRolloutVideo()
+    testPolicyAgent()
     

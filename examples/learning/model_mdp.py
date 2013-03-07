@@ -69,9 +69,23 @@ def test3():
     from examples.gridphysics.mazes.windy import windy_stoch_game, windy_level
     plotOptimalValues(windy_stoch_game, windy_level)
     pylab.show()
-
+    
+def test4():
+    """ Same thing, but animated. """
+    from examples.gridphysics.mazes.windy import windy_stoch_game, windy_level
+    from pybrain.rl.experiments.episodic import EpisodicExperiment
+    from vgdl.interfaces import GameEnvironment, GameTask, PolicyDrivenAgent 
+    g = VGDLParser().parseGame(windy_stoch_game)
+    g.buildLevel(windy_level)
+    env = GameEnvironment(g, visualize=True, actionDelay=100)
+    task = GameTask(env)
+    agent = PolicyDrivenAgent.buildOptimal(env)
+    exper = EpisodicExperiment(task, agent)
+    res = exper.doEpisodes(5)
+    print res
     
 if __name__ == '__main__':
     #test1()
     #test2()
-    test3()
+    #test3()
+    test4()
