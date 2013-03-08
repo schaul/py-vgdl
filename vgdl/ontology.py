@@ -533,16 +533,17 @@ def drownSprite(sprite, partner, game):
 def drownSafe(sprite, partner, game):
     sprite.drowning_safe = True
     
-def wrapAround(sprite, partner, game):
-    """ Move to the edge of the screen in the direction the sprite is coming from. """
+def wrapAround(sprite, partner, game, offset=0):
+    """ Move to the edge of the screen in the direction the sprite is coming from. 
+    Plus possibly an offest. """
     if sprite.orientation[0] > 0:
-        sprite.rect.left=0
+        sprite.rect.left=offset*sprite.rect.size[1]
     elif sprite.orientation[0] < 0:
-        sprite.rect.left=game.screensize[0]-sprite.rect.size[0]
+        sprite.rect.left=game.screensize[0]-sprite.rect.size[0]*(1+offset)
     if sprite.orientation[1] > 0:
-        sprite.rect.top=0
+        sprite.rect.top=offset*sprite.rect.size[1]
     elif sprite.orientation[1] < 0:        
-        sprite.rect.top=game.screensize[1]-sprite.rect.size[1]
+        sprite.rect.top=game.screensize[1]-sprite.rect.size[1]*(1+offset)
     sprite.lastmove=0
     
 def pullWithIt(sprite, partner, game):
