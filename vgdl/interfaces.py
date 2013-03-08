@@ -53,7 +53,7 @@ class GameEnvironment(Environment):
                 if isinstance(self._avatar, RotatingAvatar):
                     self._oriented = True
                 else:
-                    self._oriented = False                
+                    self._oriented = False
             else:
                 # retain observable features
                 tmp = [self._sprite2state(sprite, oriented=False) for sprite in ss if sprite.is_static]
@@ -116,7 +116,9 @@ class GameEnvironment(Environment):
     def setState(self, state):
         self._setSpriteState(self._avatar, state)
         self._game.kill_list = []   
-        VGDLSprite.update(self._avatar, self._game)           
+        self._avatar.lastrect = self._avatar.rect
+        self._avatar.lastmove = 0
+        #VGDLSprite.update(self._avatar, self._game)           
         
     def getState(self):
         return self._sprite2state(self._avatar)

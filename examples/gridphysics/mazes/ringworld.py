@@ -67,7 +67,7 @@ def ringworld(width):
     level = ["w"]*(width+2)+["\n"]
     level += ["w"]+[" "]*width+["w\n"]
     level += ["w"]*(width+2)+["\n"]
-    level[int(width*1.5)+3] = 'G'    
+    level[int(width*1.5+3.5)] = 'G'    
     level[-(width+5)] = 'A'    
     level_str = ''.join(level)
     return level_str

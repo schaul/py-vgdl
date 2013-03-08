@@ -52,7 +52,7 @@ class MDPconverter(object):
         dim = len(self.states)        
         if self.verbose:
             print 'Actual states:', dim
-            print 'Non-negative rewards:', self.rewards
+            print 'Non-zero rewards:', self.rewards
             print 'Initial state', initSet[0]
         Ts = [zeros((dim, dim)) for _ in self.env._actionset]
         R = zeros(dim)
@@ -99,6 +99,8 @@ class MDPconverter(object):
             # remember the outcome of the action
             dest = self.env.getState()
             res.append(dest)
+            if self.verbose:
+                print state, 'do', a, '>', dest
             self.sas_tuples.append((state, a, dest))            
             # remember reward if the final state ends the game
             ended, win = self.env._isDone()
