@@ -64,6 +64,7 @@ def portalringworld(length):
 
 
 def ringworld(width):
+    assert width > 1
     level = ["w"]*(width+2)+["\n"]
     level += ["w"]+[" "]*width+["w\n"]
     level += ["w"]*(width+2)+["\n"]

@@ -31,7 +31,8 @@ Features
  * A parser for textual level descriptions
  * An ontology with numerous high-level building blocks for games
      * grid-based physics engine
-     * continous physics engine, including gravity, friction, etc.
+     * continuous physics engine, including gravity, friction, etc.
+     * stochastic events
 * Classic examples (simplified versions)
  * Space invaders
  * Frogger
@@ -47,7 +48,7 @@ Features
 * Bot play
  * Interface for artificial players (bots)
  * Conversion of game dynamics into the transition matrices of a Markov Decision Process (MDP)
- * Automaticlly generated local/subjective observation features
+ * Automatically generated local/subjective observation features
  * Reinforcement learning
      * Easy interface to RL algorithms from PyBrain
      * Classic grid world benchmarks
