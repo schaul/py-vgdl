@@ -14,16 +14,17 @@ from pybrain.rl.environments.environment import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
 from pybrain.rl.agents.agent import Agent
 from pybrain.rl.learners.modelbased import policyIteration
-from pybrain.utilities import drawIndex, setAllArgs
+from pybrain.utilities import drawIndex, setAllArgs, crossproduct
 
-from ontology import MovingAvatar, RotatingAvatar, BASEDIRS, GridPhysics
-from core import VGDLSprite
+from ontology import RotatingAvatar, BASEDIRS, GridPhysics
+from core import VGDLSprite, Avatar
 from tools import listRotate
 
 
 class GameEnvironment(Environment):
     """ Wrapping a VGDL game into an environment class, where state can be read out directly
-    or set. Currently limited to single avatar games, with gridphysics, where all other sprites are static. 
+    or set. Currently limited to single avatar games, with gridphysics, 
+    where all other sprites are static. 
     """
     
     # If the visualization is enabled, all actions will be reflected on the screen.
@@ -43,27 +44,33 @@ class GameEnvironment(Environment):
         for skey, ss in sorted(game.sprite_groups.items())[::-1]:
             if len(ss) == 0:
                 continue
-            if isinstance(ss[0], MovingAvatar):
-                # find avatar
-                assert len(ss) == 1, 'Not supported: Only a single avatar can be used.'
-                self._avatar = ss[0]
-                assert issubclass(self._avatar.physicstype, GridPhysics), \
-                                    'Not supported: Game must have grid physics, has %s'\
-                                    % (self._avatar.physicstype.__name__)   
-                if isinstance(self._avatar, RotatingAvatar):
-                    self._oriented = True
-                else:
-                    self._oriented = False
+            if isinstance(ss[0], Avatar):
+                continue            
             else:
                 # retain observable features
                 tmp = [self._sprite2state(sprite, oriented=False) for sprite in ss if sprite.is_static]
                 self._obstypes[skey] = tmp
                 self._obscols[skey] = ss[0].color
                 assert ss[0].is_static, "not supported: all non-avatar sprites must be static. "
+        
+        assert issubclass(self._avatar.physicstype, GridPhysics), \
+                        'Not supported: Game must have grid physics, has %s'\
+                        % (self._avatar.physicstype.__name__)   
+        if isinstance(self._avatar, RotatingAvatar):
+            self._oriented = True
+        else:
+            self._oriented = False
+            
         self._initstate = self.getState()
         ns = self._stateNeighbors(self._initstate)
         self.outdim = (len(ns) + 1) * len(self._obstypes)
         self.reset()        
+        
+    @property
+    def _avatar(self):
+        ss = self._game.getAvatars()
+        assert len(ss) <= 1, 'Not supported: Only a single avatar can be used, found %s' % ss
+        return ss[0]
     
     def reset(self):
         self.setState(self._initstate)
@@ -94,8 +101,7 @@ class GameEnvironment(Environment):
             s.orientation = state[2]
             self._setRectPos(s.rect, (state[0], state[1]))
         else:
-            self._setRectPos(s.rect, state)
-            
+            self._setRectPos(s.rect, state)            
 
     def _stateNeighbors(self, state):
         """ Can be different in subclasses... 
@@ -115,10 +121,9 @@ class GameEnvironment(Environment):
         
     def setState(self, state):
         self._setSpriteState(self._avatar, state)
-        self._game.kill_list = []   
+        self._game._clearAll(self.visualize)
         self._avatar.lastrect = self._avatar.rect
-        self._avatar.lastmove = 0
-        #VGDLSprite.update(self._avatar, self._game)           
+        self._avatar.lastmove = 0         
         
     def getState(self):
         return self._sprite2state(self._avatar)
@@ -190,8 +195,6 @@ class GameEnvironment(Environment):
             if ended:
                 return ended, win
         return False, False
-    
-    
 
     def rollOut(self, action_sequence, init_state=None, callback=lambda * _:None):
         """ Take a sequence of actions. """
@@ -203,6 +206,45 @@ class GameEnvironment(Environment):
             self.performAction(a)
             callback(self)
         
+
+class AugmentedGameEnvironment(GameEnvironment):
+    """ Extension, to permit disappearance of sprites
+    in the state representation.
+    """
+    
+    def __init__(self, game, actionset=BASEDIRS, **kwargs):
+        self._otherlocations = {}
+        GameEnvironment.__init__(self, game, actionset, **kwargs)        
+        for skey in self._obstypes:
+            if skey=='wall':
+                continue
+            for s in self._game.sprite_groups[skey]:
+                # TODO: figure out whether this type of sprite is killable
+                self._otherlocations[(skey, self._rect2pos(s.rect))] = True
+        self._initstate = self.getState()
+        
+    def _getPresences(self):
+        """ Binary vector of which non-avatar sprites are present. """
+        res = zeros(len(self._otherlocations), dtype=bool)
+        for i, (skey, pos) in enumerate(self._otherlocations):
+            if pos in [self._rect2pos(s.rect) for s in self._game.sprite_groups[skey]
+                       if s not in self._game.kill_list]:
+                res[i] = True
+        return tuple(list(res))
+    
+    def getState(self):
+        return GameEnvironment.getState(self), self._getPresences()
+    
+    def setState(self, state):
+        #print 'set?', state[1]
+        GameEnvironment.setState(self, state[0])
+        
+    def _stateNeighbors(self, state):
+        return GameEnvironment._stateNeighbors(self, state[0])
+    
+    def allStates(self):
+        loc_combs = map(tuple, crossproduct([[True,False]] * len(self._otherlocations)))
+        return map(tuple, crossproduct([GameEnvironment.allStates(self), loc_combs]))
 
 class GameTask(EpisodicTask):
     """ A minimal Task wrapper that only considers win/loss information. """
@@ -365,11 +407,34 @@ def testRecordingToGif(human=False):
     actions = [a for _,a,_ in env._allEvents]
     makeGifVideo(g, actions, initstate=env._initstate)
     
+def testAugmented():
+    from core import VGDLParser
+    from mdpmap import MDPconverter
+    from ontology import RIGHT
+
+    miniz= """
+wwwwwww
+wA + Gw
+wwwwwww
+"""
+    from examples.gridphysics.mazes.rigidzelda import rigidzelda_game
+    g = VGDLParser().parseGame(rigidzelda_game)
+    #g.buildLevel(zelda_level)
+    g.buildLevel(miniz)
+    env = AugmentedGameEnvironment(g, visualize=False, actionset=[RIGHT],
+                                   recordingEnabled=True, actionDelay=200)
+    C = MDPconverter(g, env=env, verbose=True)
+    Ts, R, _ = C.convert()
+    print Ts
+    print R
+    #agent = PolicyDrivenAgent.buildOptimal(env)
+    
+    
     
 if __name__ == "__main__":
     # testRollout()
     # testInteractions()
     #testRolloutVideo()
     #testPolicyAgent()
-    testRecordingToGif(human=True)
-    
+    #testRecordingToGif(human=True)
+    testAugmented()

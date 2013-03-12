@@ -217,12 +217,18 @@ class BasicGame(object):
         else: 
             return len([s for s in self if key in s.stypes])-deleted
         
-    def _clearAll(self):
+    def getAvatars(self):
+        """ The currently alive avatar(s) """
+        return [s for s in self if isinstance(s, Avatar) and s not in self.kill_list]
+        
+    def _clearAll(self, onscreen=True):
         for s in set(self.kill_list):
-            s._clear(self.screen, self.background, double=True)
+            if onscreen:
+                s._clear(self.screen, self.background, double=True)
             self.sprite_groups[s.name].remove(s)
-        for s in self:
-            s._clear(self.screen, self.background)
+        if onscreen:
+            for s in self:
+                s._clear(self.screen, self.background)
         self.kill_list = []            
     
     def _drawAll(self):
@@ -378,7 +384,14 @@ class VGDLSprite(object):
             r = screen.blit(background, self.lastrect, self.lastrect)
             VGDLSprite.dirtyrects.append(r)    
 
+    def __repr__(self):
+        return self.__class__.__name__+" at (%s,%s) %s"%(self.rect.left, self.rect.top, self.color)
 
+
+class Avatar(object):
+    """ Abstract superclass of all avatars. """
+    
+   
 class Termination(object):
     """ Base class for all termination criteria. """
     def isDone(self, game):
