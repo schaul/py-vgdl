@@ -29,8 +29,11 @@ class MDPconverter(object):
         physics are grid-based, and all other sprites are Immovables. 
     """
             
-    def __init__(self, game, verbose=False, actionset=BASEDIRS, avgOver=10):
-        self.env = GameEnvironment(game, actionset=actionset)
+    def __init__(self, game, verbose=False, actionset=BASEDIRS, env=None, avgOver=10):
+        if env is None:
+            self.env = GameEnvironment(game, actionset=actionset)
+        else:
+            self.env=env
         self.verbose = verbose
         self.sas_tuples = []
         self.rewards = {}

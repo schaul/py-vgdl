@@ -20,6 +20,7 @@ WHITE   = (250,250,250)
 BROWN   = (140, 120, 100)
 BLACK   = (0, 0, 0)
 ORANGE  = (250, 160, 0)
+YELLOW  = (250, 250, 0)
 LIGHTBLUE = (100,100,250)
 LIGHTGREEN = (50,250,50)
 LIGHTGRAY = (150,150,150)
@@ -236,7 +237,9 @@ class Bomber(SpawnPoint, Missile):
 # ---------------------------------------------------------------------
 #     Avatars: player-controlled sprite types
 # ---------------------------------------------------------------------
-class MovingAvatar(VGDLSprite):
+from core import Avatar
+
+class MovingAvatar(VGDLSprite, Avatar):
     """ Default avatar, moves in the 4 cardinal directions. """
     color=WHITE    
     speed=1    
