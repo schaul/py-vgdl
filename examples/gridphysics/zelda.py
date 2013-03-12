@@ -18,33 +18,34 @@ wwwwwwwwwwwww
 
         
 zelda_game = """
-BasicGame 
-    SpriteSet         
-        goal   > Immovable color=GREEN
-        key    > Immovable color=ORANGE
-        sword  > Flicker limit=5  singleton=True
-        movable > 
-            avatar  > LinkAvatar   stype=sword 
-                withoutkey >
-                withkey    > color=ORANGE
-            monster > RandomNPC    color=BROWN cooldown=2 speed=0.5
-    LevelMapping
-        G > goal
-        + > key        
-        A > withoutkey
-        1 > monster            
-    InteractionSet
-        movable wall   > stepBack
-        withoutkey goal> stepBack
-        goal withkey   > killSprite        
-        monster sword  > killSprite        
-        avatar monster > killSprite
-        key  avatar    > killSprite
-        withoutkey key > transformTo stype=withkey                
-    TerminationSet
-        SpriteCounter stype=goal   limit=0 win=True
-        SpriteCounter stype=avatar limit=0 win=False              
+BasicGame
+  SpriteSet         
+    goal  > Immovable color=GREEN
+    key   > Immovable color=ORANGE
+    sword > Flicker limit=5 singleton=True
+    movable > 
+      avatar  > LinkAvatar   stype=sword 
+        nokey   >
+        withkey > color=ORANGE
+      monster > RandomNPC cooldown=4 
+  LevelMapping
+    G > goal
+    + > key        
+    A > nokey
+    1 > monster            
+  InteractionSet
+    movable wall  > stepBack
+    nokey goal    > stepBack
+    goal withkey  > killSprite        
+    monster sword > killSprite        
+    avatar monster> killSprite
+    key  avatar   > killSprite
+    nokey key     > transformTo stype=withkey                
+  TerminationSet
+    SpriteCounter stype=goal   win=True
+    SpriteCounter stype=avatar win=False
 """
+
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
