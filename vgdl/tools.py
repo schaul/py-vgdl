@@ -178,13 +178,13 @@ def featurePlot(size, states, fMap, plotdirections=False):
     pylab.yticks([])
     
     
-def makeGifVideo(game, actions, initstate=None, prefix='seq_', duration=0.1,
+def makeGifVideo(env, actions, initstate=None, prefix='seq_', duration=0.1,
                  outdir='../gifs/', tmpdir='../temp/'):
     """ Generate an animated gif from a sequence of actions. """
     from external_libs.images2gif import writeGif
     import Image
-    from interfaces import GameEnvironment 
-    env = GameEnvironment(game, visualize=True)
+    env.visualize = True
+    env.reset()
     if initstate is not None:
         env.setState(initstate)
     env._counter = 1
@@ -193,7 +193,7 @@ def makeGifVideo(game, actions, initstate=None, prefix='seq_', duration=0.1,
     
     def cb(*_):
         fn = tmpdir + "tmp%05d.png" % env._counter
-        pygame.image.save(game.screen, fn)
+        pygame.image.save(env._game.screen, fn)
         res_images.append(Image.open(fn))
         env._counter += 1
         

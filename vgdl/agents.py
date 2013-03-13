@@ -54,6 +54,8 @@ class PolicyDrivenAgent(Agent):
         C = MDPconverter(env=game_env)
         Ts, R, _ = C.convert()
         policy, _ = policyIteration(Ts, R, discountFactor=discountFactor)
+        game_env.reset()
+
         def x(*_):
             s = game_env.getState()
             #print s

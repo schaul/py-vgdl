@@ -123,6 +123,7 @@ class GameEnvironment(Environment, StateObsHandler):
         if init_state is not None:
             self.setState(init_state)
         for a in action_sequence:
+            print a, self.getState()
             if self._isDone()[0]:
                 break
             self.performAction(a)
@@ -178,7 +179,7 @@ def testRolloutVideo(actions=[0, 0, 2, 2, 0, 3] * 2):
     game_str, map_str = polarmaze_game, maze_level_1
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
-    makeGifVideo(g, actions)
+    makeGifVideo(GameEnvironment(g, visualize=True), actions)
     
     
 def testInteractions():
@@ -214,9 +215,11 @@ def testPolicyAgent():
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)
     
-    env = GameEnvironment(g, visualize=True, actionDelay=100)
+    env = GameEnvironment(g, visualize=False, actionDelay=100)
     task = GameTask(env)
     agent = PolicyDrivenAgent.buildOptimal(env)
+    env.visualize = True
+    env.reset()
     exper = EpisodicExperiment(task, agent)
     res = exper.doEpisodes(2)
     print res
@@ -242,7 +245,8 @@ def testRecordingToGif(human=False):
     print res
     
     actions = [a for _,a,_ in env._allEvents]
-    makeGifVideo(g, actions, initstate=env._initstate)
+    print actions
+    makeGifVideo(env, actions, initstate=env._initstate)
     
 def testAugmented():
     from core import VGDLParser
@@ -287,4 +291,5 @@ if __name__ == "__main__":
     #testRolloutVideo()
     #testPolicyAgent()
     #testRecordingToGif(human=True)
+    #testRecordingToGif(human=False)
     testAugmented()
