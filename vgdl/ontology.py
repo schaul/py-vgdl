@@ -568,3 +568,6 @@ def teleportToExit(sprite, partner, game):
     
 # this allows us to determine whether the game has stochastic elements or not
 stochastic_effects = [teleportToExit, windGust, slipForward, attractGaze]
+
+# this allows is to determine which effects might kill a sprite
+kill_effects = [killSprite, drownSprite, killIfSlow, transformTo]
