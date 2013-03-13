@@ -75,8 +75,11 @@ class MDPconverter(object):
         if self.verbose:
             print 'Built Ts.'
         for T in Ts:
-            for row in T:  
-                row /= sum(row)
+            for ti, row in enumerate(T):
+                if sum(row) > 0:  
+                    row /= sum(row)
+                else:
+                    row[ti] = 1
         if self.verbose:
             print 'Normalized Ts.'
         if observations:
@@ -95,6 +98,8 @@ class MDPconverter(object):
         
     def tryMoves(self, state):
         res = []
+        if state in self.rewards:
+            return res
         for ai, a in self.avgOver * list(enumerate(self.env._actionset)):
             # reset game to starting state
             self.env.setState(state)
@@ -146,4 +151,15 @@ def testStochMaze():
     
 if __name__ == '__main__':
     # testMaze()
-    testStochMaze()
+    print '''
+    
+    state must capture which avatar class is alive, if there could be more than one
+    state must be able to revive a dead avatar correctly in setState
+    
+    there should be a special state for end-of-game through death? 
+    Maybe keep the corpse where it died?
+    
+    All of this is non-trivial
+    
+    '''
+    #testStochMaze()

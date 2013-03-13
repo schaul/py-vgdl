@@ -70,6 +70,9 @@ class GameEnvironment(Environment):
     def _avatar(self):
         ss = self._game.getAvatars()
         assert len(ss) <= 1, 'Not supported: Only a single avatar can be used, found %s' % ss
+        if len(ss) == 0:
+            print 'Avatar died.'
+            return None
         return ss[0]
     
     def reset(self):
@@ -126,6 +129,8 @@ class GameEnvironment(Environment):
         self._avatar.lastmove = 0         
         
     def getState(self):
+        if self._avatar is None:
+            return None
         return self._sprite2state(self._avatar)
     
     def allStates(self):
@@ -174,6 +179,7 @@ class GameEnvironment(Environment):
         # handle collision effects                
         self._game._updateCollisionDict()
         self._game._eventHandling()
+        self._game._clearAll(self.visualize)
         
         # update screen
         if self.visualize:
@@ -413,15 +419,15 @@ def testAugmented():
     from ontology import RIGHT
 
     miniz= """
-wwwwwww
-wA + Gw
-wwwwwww
+wwwwwwww
+wA + G w
+wwwwwwww
 """
-    from examples.gridphysics.mazes.rigidzelda import rigidzelda_game
+    from examples.gridphysics.mazes.rigidzelda import rigidzelda_game, zelda_level
     g = VGDLParser().parseGame(rigidzelda_game)
-    #g.buildLevel(zelda_level)
-    g.buildLevel(miniz)
-    env = AugmentedGameEnvironment(g, visualize=False, actionset=[RIGHT],
+    g.buildLevel(zelda_level)
+    #g.buildLevel(miniz)
+    env = AugmentedGameEnvironment(g, visualize=False, #actionset=[RIGHT],
                                    recordingEnabled=True, actionDelay=200)
     C = MDPconverter(g, env=env, verbose=True)
     Ts, R, _ = C.convert()
