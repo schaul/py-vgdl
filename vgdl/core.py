@@ -384,7 +384,7 @@ class VGDLSprite(object):
             VGDLSprite.dirtyrects.append(r)    
 
     def __repr__(self):
-        return self.__class__.__name__+" at (%s,%s) %s"%(self.rect.left, self.rect.top, self.color)
+        return self.name+" at (%s,%s)"%(self.rect.left, self.rect.top)
 
 
 class Avatar(object):

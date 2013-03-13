@@ -113,6 +113,7 @@ class StateObsHandler(object):
         return ss[0]
     
     def setState(self, state):
+        # no avatar?
         if self._avatar is None:
             pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
             if self.uniqueAvatar:
@@ -120,9 +121,11 @@ class StateObsHandler(object):
             else:
                 atype = state[-1]
             self._game._createSprite([atype], pos)
+        
+        # bad avatar?
         if not self.uniqueAvatar:
             atype = state[-1]
-            if self._avatar.stypes[-1] != atype:
+            if self._avatar.name != atype:
                 self._game.kill_list.append(self._avatar)
                 pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
                 self._game._createSprite([atype], pos)            
@@ -147,13 +150,13 @@ class StateObsHandler(object):
                 return tuple(list(self._sprite2state(self._avatar)) + [self._getPresences()])
             else:
                 return tuple(list(self._sprite2state(self._avatar)) 
-                             + [self._getPresences()] + [self._avatar.stypes[-1]])
+                             + [self._getPresences()] + [self._avatar.name])
         else:
             if self.uniqueAvatar:
                 return self._sprite2state(self._avatar)
             else:
                 return tuple(list(self._sprite2state(self._avatar)) 
-                             + [self._avatar.stypes[-1]])
+                             + [self._avatar.name])
                 
     def _getPresences(self):
         """ Binary vector of which non-avatar sprites are present. """
@@ -161,21 +164,21 @@ class StateObsHandler(object):
         for i, (skey, pos) in enumerate(sorted(self._gravepoints)):
             if pos in [self._rect2pos(s.rect) for s in self._game.sprite_groups[skey]
                        if s not in self._game.kill_list]:
-                res[i] = 1
+                res[i] = 1                
         return tuple(list(res))
     
     def _setPresences(self, p):
         for i, (skey, pos) in enumerate(sorted(self._gravepoints)):
-            target = p[i]
+            target = p[i] != 0 
             matches = [s for s in self._game.sprite_groups[skey] if self._rect2pos(s.rect)==pos]
             current = (not len(matches) == 0 and matches[0] not in self._game.kill_list)
             if current == target:
                 continue
             elif current:
-                #print 'die', skey, pos
-                self._game.kill_list.append(s)
+                #print 'die', skey, pos, matches
+                self._game.kill_list.append(matches[0])
             elif target:
-                #print 'live', skey, pos
+                #print 'live', skey, pos, matches
                 pos = (pos[0]*self._game.block_size, pos[1]*self._game.block_size)
                 self._game._createSprite([skey], pos)
                     
@@ -375,14 +378,20 @@ class PolicyDrivenAgent(Agent):
         return drawIndex(self.policy[self.stateIndexFun()])
             
     @staticmethod
-    def buildOptimal(game_env, discountFactor=0.9):
+    def buildOptimal(game_env, discountFactor=0.99):
         """ Given a game, find the optimal (state-based) policy and 
         return an agent that is playing accordingly. """
         from mdpmap import MDPconverter
-        C = MDPconverter(game_env._game)
+        C = MDPconverter(env=game_env)
         Ts, R, _ = C.convert()
         policy, _ = policyIteration(Ts, R, discountFactor=discountFactor)
-        return PolicyDrivenAgent(policy, lambda *_: C.states.index(game_env.getState()))
+        def x(*_):
+            s = game_env.getState()
+            #print s
+            i = C.states.index(s)
+            return i
+        #return PolicyDrivenAgent(policy, lambda *_: C.states.index(game_env.getState()))
+        return PolicyDrivenAgent(policy, x)
 
 
 def makeGifVideo(game, actions, initstate=None, prefix='seq_', duration=0.1,
@@ -494,8 +503,8 @@ def testAugmented():
     
     miniz= """
 wwwwwwwwwwwwwww
-wA  + k  10 Gww
-ww wwwww wwwwww
+wA  + k  1 0 Gw
+ww1wwwww wwwwww
 ww   1   wwwwww
 wwwwwwwwwwwwwww
 """
@@ -503,13 +512,11 @@ wwwwwwwwwwwwwww
 
     zelda_level2 = """
 wwwwwwwwwwwww
-wA wwk1wwwwww
-w    w      w
-wwww    ww +w
-w www1wwwwwww
-w ww     0  w
-w1 wwwwwww  w
-w kwwwwwww Gw
+wwwwwk1wwwwww
+wwwwww   A ww
+wwwww  www +w
+wwwww1wwwwwww
+wwwww0Gwwwwww
 wwwwwwwwwwwww
 """
 
@@ -551,8 +558,8 @@ BasicGame frame_rate=10
 """
     from examples.gridphysics.mazes.rigidzelda import rigidzelda_game, zelda_level
     g = VGDLParser().parseGame(rigidzelda_game)
-    #g.buildLevel(zelda_level2)
-    g.buildLevel(miniz)
+    g.buildLevel(zelda_level)
+    #g.buildLevel(miniz)
     env = GameEnvironment(g, visualize=False, 
                           recordingEnabled=True, actionDelay=150)
     C = MDPconverter(g, env=env, verbose=True)
