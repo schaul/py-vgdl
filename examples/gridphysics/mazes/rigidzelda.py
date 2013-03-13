@@ -42,7 +42,7 @@ BasicGame frame_rate=10
     InteractionSet
         avatar wall    > stepBack
         nokey door     > stepBack
-        goal withkey   > killSprite        
+        goal avatar    > killSprite        
         monster nokey  > killSprite        
         naked monster  > killSprite
         withkey monster> killSprite
