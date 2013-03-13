@@ -197,8 +197,7 @@ class BasicGame(object):
         self.screen = pygame.display.set_mode(size)
         self.background = pygame.Surface(size)
         self.background.fill(LIGHTGRAY)
-        self.screen.blit(self.background, (0,0))
-        
+        self.screen.blit(self.background, (0,0))        
         
     def __iter__(self):
         """ Iterator over all sprites """

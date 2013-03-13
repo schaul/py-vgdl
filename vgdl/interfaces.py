@@ -50,17 +50,22 @@ class StateObsHandler(object):
         setAllArgs(self, kwargs)
         self._game = game
         self._avatar_types = []
+        self._abs_avatar_types = []
         self._other_types = []
         self._mortal_types = []
-        for skey, ss in sorted(game.sprite_groups.items()):
-            sclass = game.sprite_constr[skey][0]
+        for skey in sorted(game.sprite_constr): 
+            sclass, _, stypes = game.sprite_constr[skey]
             if issubclass(sclass, Avatar):
-                self._avatar_types += [skey]
+                self._abs_avatar_types += stypes[:-1]
+                self._avatar_types += [stypes[-1]]
                 if issubclass(sclass, RotatingAvatar) or issubclass(sclass, LinkAvatar):
                     self.orientedAvatar = True
+            if skey not in game.sprite_groups:
+                continue 
+            ss = game.sprite_groups[skey]
             if len(ss) == 0:
                 continue
-            elif isinstance(ss[0], Avatar):
+            if isinstance(ss[0], Avatar):
                 assert issubclass(ss[0].physicstype, GridPhysics), \
                         'Not supported: Game must have grid physics, has %s'\
                         % (self._avatar.physicstype.__name__)                       
@@ -68,20 +73,21 @@ class StateObsHandler(object):
                 self._other_types += [skey]
                 if not ss[0].is_static:
                     self.staticOther = False
-        self.uniqueAvatar = (len(self._avatar_types) == 1)
         assert self.staticOther, "not yet supported: all non-avatar sprites must be static. "
+        
+        self._avatar_types = sorted(set(self._avatar_types).difference(self._abs_avatar_types))
+        self.uniqueAvatar = (len(self._avatar_types) == 1)
+        #assert self.uniqueAvatar, 'not yet supported: can only have one avatar class'
         
         # determine mortality
         for skey, _, effect, _ in game.collision_eff:
             if effect in kill_effects:
-                if skey in self._avatar_types:
+                if skey in self._avatar_types+self._abs_avatar_types:
                     self.mortalAvatar = True
                 if skey in self._other_types:
                     self.mortalOther = True
                     self._mortal_types += [skey]
         
-        #assert not self.mortalAvatar, 'not yet supported: can not yet revive avatars'
-        assert self.uniqueAvatar, 'not yet supported: can only have one avatar class'
                  
         # retain observable features, and their colors
         self._obstypes = {}
@@ -109,15 +115,26 @@ class StateObsHandler(object):
     def setState(self, state):
         if self._avatar is None:
             pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
-            self._game._createSprite([self._avatar_types[0]], pos)
+            if self.uniqueAvatar:
+                atype = self._avatar_types[0]
+            else:
+                atype = state[-1]
+            self._game._createSprite([atype], pos)
+        if not self.uniqueAvatar:
+            atype = state[-1]
+            if self._avatar.stypes[-1] != atype:
+                self._game.kill_list.append(self._avatar)
+                pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
+                self._game._createSprite([atype], pos)            
+            
         if self.visualize:
             self._avatar._clear(self._game.screen, self._game.background)
-        if self.uniqueAvatar:
-            if self.mortalOther:
-                self._setSpriteState(self._avatar, state[:-1])
-                self._setPresences(state[-1])   
-            else:
-                self._setSpriteState(self._avatar, state)
+        if not self.uniqueAvatar:
+            state = state[:-1]
+        if self.mortalOther:
+            self._setPresences(state[-1])
+            state = state[:-1]  
+        self._setSpriteState(self._avatar, state)
         self._game._clearAll(self.visualize)
         self._avatar.lastrect = self._avatar.rect
         self._avatar.lastmove = 0               
@@ -126,10 +143,18 @@ class StateObsHandler(object):
         if self._avatar is None:
             return (-1,-1, 'dead')
         if self.mortalOther:
-            return tuple(list(self._sprite2state(self._avatar)) + [self._getPresences()])
+            if self.uniqueAvatar:
+                return tuple(list(self._sprite2state(self._avatar)) + [self._getPresences()])
+            else:
+                return tuple(list(self._sprite2state(self._avatar)) 
+                             + [self._getPresences()] + [self._avatar.stypes[-1]])
         else:
-            return self._sprite2state(self._avatar)
-
+            if self.uniqueAvatar:
+                return self._sprite2state(self._avatar)
+            else:
+                return tuple(list(self._sprite2state(self._avatar)) 
+                             + [self._avatar.stypes[-1]])
+                
     def _getPresences(self):
         """ Binary vector of which non-avatar sprites are present. """
         res = zeros(len(self._gravepoints), dtype=int)
@@ -300,6 +325,8 @@ class GameTask(EpisodicTask):
     """ A minimal Task wrapper that only considers win/loss information. """
     _ended = False
     
+    maxSteps=100
+    
     def reset(self):
         self.env.reset()
         self._ended = False
@@ -314,7 +341,7 @@ class GameTask(EpisodicTask):
         return 0
     
     def isFinished(self):
-        return self._ended
+        return self._ended or self.samples >= self.maxSteps
 
 
 class InteractiveAgent(Agent):
@@ -322,6 +349,7 @@ class InteractiveAgent(Agent):
        
     def getAction(self):
         from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
+        from pygame.locals import K_ESCAPE, QUIT        
         from ontology import RIGHT, LEFT, UP, DOWN
         pygame.event.pump()
         keystate = pygame.key.get_pressed()    
@@ -329,7 +357,9 @@ class InteractiveAgent(Agent):
         if   keystate[K_RIGHT]: res = BASEDIRS.index(RIGHT)
         elif keystate[K_LEFT]:  res = BASEDIRS.index(LEFT)
         elif keystate[K_UP]:    res = BASEDIRS.index(UP)
-        elif keystate[K_DOWN]:  res = BASEDIRS.index(DOWN)
+        elif keystate[K_DOWN]:  res = BASEDIRS.index(DOWN)        
+        if keystate[K_ESCAPE] or pygame.event.peek(QUIT):
+            raise 'User aborted.'
         return res
     
 
@@ -463,16 +493,68 @@ def testAugmented():
     from mdpmap import MDPconverter
     
     miniz= """
-wwwwwwww
-wA + G w
-wwwwwwww
+wwwwwwwwwwwwwww
+wA  + k  10 Gww
+ww wwwww wwwwww
+ww   1   wwwwww
+wwwwwwwwwwwwwww
+"""
+
+
+    zelda_level2 = """
+wwwwwwwwwwwww
+wA wwk1wwwwww
+w    w      w
+wwww    ww +w
+w www1wwwwwww
+w ww     0  w
+w1 wwwwwww  w
+w kwwwwwww Gw
+wwwwwwwwwwwww
+"""
+
+    rigidzelda_game2 = """
+BasicGame frame_rate=10
+    SpriteSet     
+        structure > Immovable
+            goal   > color=GREEN
+            door   > color=LIGHTGREEN
+            key    > color=YELLOW     
+            sword  > color=RED
+            monster > color=ORANGE
+        slash  > Flicker limit=5  singleton=True
+        avatar  > MovingAvatar 
+            naked   > 
+            nokey   > color=RED
+            withkey > color=YELLOW
+    LevelMapping
+        G > goal
+        k > key        
+        + > sword
+        A > naked
+        0 > door
+        1 > monster            
+    InteractionSet
+        avatar wall    > stepBack
+        nokey door     > stepBack
+        goal avatar    > killSprite        
+        monster nokey  > killSprite        
+        naked monster  > killSprite
+        withkey monster> killSprite
+        key  avatar    > killSprite
+        sword avatar   > killSprite
+        nokey key   > transformTo stype=withkey
+        naked sword > transformTo stype=nokey                
+    TerminationSet
+        SpriteCounter stype=goal   limit=0 win=True
+        SpriteCounter stype=avatar limit=0 win=False              
 """
     from examples.gridphysics.mazes.rigidzelda import rigidzelda_game, zelda_level
     g = VGDLParser().parseGame(rigidzelda_game)
-    g.buildLevel(zelda_level)
-    #g.buildLevel(miniz)
+    #g.buildLevel(zelda_level2)
+    g.buildLevel(miniz)
     env = GameEnvironment(g, visualize=False, 
-                          recordingEnabled=True, actionDelay=50)
+                          recordingEnabled=True, actionDelay=150)
     C = MDPconverter(g, env=env, verbose=True)
     Ts, R, _ = C.convert()
     print C.states
