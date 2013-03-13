@@ -29,29 +29,25 @@ class MDPconverter(object):
         physics are grid-based, and all other sprites are Immovables. 
     """
             
-    def __init__(self, game, verbose=False, actionset=BASEDIRS, env=None, avgOver=10):
+    def __init__(self, game=None, verbose=False, actionset=BASEDIRS, env=None, avgOver=10):
         if env is None:
-            self.env = GameEnvironment(game, actionset=actionset)
-        else:
-            self.env=env
+            env = GameEnvironment(game, actionset=actionset)
+        self.env = env
         self.verbose = verbose
         self.sas_tuples = []
         self.rewards = {}
-        
-        if game.is_stochastic:
+        if env._game.is_stochastic:
             # in the stochastic case, how often is every state-action pair tried?
             self.avgOver = avgOver
         else:
             self.avgOver = 1
             
     def convert(self, observations=True):
-        alls = self.env.allStates()
         if self.verbose:
             if observations:
                 print 'Number of features:', 5 * len(self.env._obstypes)
-            print 'Maximum state space:', len(alls)
         initSet = [self.env._initstate]
-        self.states = sorted(flood(self.tryMoves, alls, initSet))
+        self.states = sorted(flood(self.tryMoves, None, initSet))
         dim = len(self.states)        
         if self.verbose:
             print 'Actual states:', dim
@@ -117,6 +113,8 @@ class MDPconverter(object):
                     self.rewards[dest] = 1
                 else:
                     self.rewards[dest] = -1
+                if self.verbose:
+                    print 'Ends with', win
         # pass on the list of neighboring states
         return res
         
@@ -151,15 +149,4 @@ def testStochMaze():
     
 if __name__ == '__main__':
     # testMaze()
-    print '''
-    
-    state must capture which avatar class is alive, if there could be more than one
-    state must be able to revive a dead avatar correctly in setState
-    
-    there should be a special state for end-of-game through death? 
-    Maybe keep the corpse where it died?
-    
-    All of this is non-trivial
-    
-    '''
-    #testStochMaze()
+    testStochMaze()
