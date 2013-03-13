@@ -7,6 +7,7 @@ Video game description language -- utility functions.
 from math import sqrt
 from scipy import ones
 import pylab
+import pygame
 from pylab import cm
 
 
@@ -175,4 +176,28 @@ def featurePlot(size, states, fMap, plotdirections=False):
             pylab.plot([o1 + 2 * x], [o2 + 2 * y], 'k.')
     pylab.xticks([])
     pylab.yticks([])
+    
+    
+def makeGifVideo(game, actions, initstate=None, prefix='seq_', duration=0.1,
+                 outdir='../gifs/', tmpdir='../temp/'):
+    """ Generate an animated gif from a sequence of actions. """
+    from external_libs.images2gif import writeGif
+    import Image
+    from interfaces import GameEnvironment 
+    env = GameEnvironment(game, visualize=True)
+    if initstate is not None:
+        env.setState(initstate)
+    env._counter = 1
+    res_images = []
+    astring = ''.join([str(a) for a in actions if a is not None])
+    
+    def cb(*_):
+        fn = tmpdir + "tmp%05d.png" % env._counter
+        pygame.image.save(game.screen, fn)
+        res_images.append(Image.open(fn))
+        env._counter += 1
+        
+    env.rollOut(actions, callback=cb)
+    writeGif(outdir + prefix + '%s.gif' % astring, res_images, duration=duration, dither=0)
+ 
     
