@@ -15,6 +15,9 @@ from pybrain.utilities import drawIndex
 
 from ontology import BASEDIRS
 
+class UserTiredException(Exception):
+    """ Raised when the player is fed up of the game. """
+    
 
 class InteractiveAgent(Agent):
     """ Reading key commands from the user. """
@@ -31,7 +34,7 @@ class InteractiveAgent(Agent):
         elif keystate[K_UP]:    res = BASEDIRS.index(UP)
         elif keystate[K_DOWN]:  res = BASEDIRS.index(DOWN)        
         if keystate[K_ESCAPE] or pygame.event.peek(QUIT):
-            raise 'User aborted.'
+            raise UserTiredException('Pressed ESC')
         return res
     
 

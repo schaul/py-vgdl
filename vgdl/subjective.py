@@ -10,7 +10,7 @@ Optional: small cheat screen gives the global view.
 
 import pygame
 
-from ontology import DARKGRAY, BASEDIRS, RED
+from ontology import DARKGRAY, BASEDIRS, LIGHTGRAY, RED, LIGHTBLUE
 from tools import squarePoints
 from interfaces import GameEnvironment
 
@@ -133,7 +133,7 @@ class SubjectiveSceen(object):
         
     def _colorWall(self, wid, col):
         """ color one of the 7 far walls. """
-        col = tuple([c/3 for c in col])
+        col = tuple([50+c/3 for c in col])
         self._drawPolygon(wallLocations[wid], col)
         pygame.display.flip()
         
@@ -142,14 +142,15 @@ class SubjectiveSceen(object):
         size = self.width, self.height
         self.screen = pygame.display.set_mode(size)
         self.background = pygame.Surface(size)
+        self.background.fill(LIGHTBLUE)
         self.reset()
         
     def reset(self):
-        self.screen.blit(self.background, (0, 0))
+        self.screen.blit(self.background, (0,0))        
         for ps in wallLocations.values():
             self._drawPolygon(ps, DARKGRAY) 
         for ps in floorLocations.values():
-            self._drawPolygon(ps, RED) 
+            self._drawPolygon(ps, LIGHTGRAY) 
         pygame.display.flip()
         
         
@@ -164,12 +165,11 @@ class SubjectiveGame(GameEnvironment):
         GameEnvironment.__init__(self, game, visualize=False, **kwargs)
         self.screen = SubjectiveSceen()
         self.screen._initScreen()
-        assert self._oriented
+        assert self.orientedAvatar, 'Only oriented/directional avatars are currently supported for the first-person view.'
         self.reset()
         
     def reset(self):
-        self.setState(self._initstate)
-        self._game.kill_list = []
+        GameEnvironment.reset(self)
         if hasattr(self, 'screen'):
             self.screen.reset()
             pygame.display.flip()  
@@ -178,10 +178,10 @@ class SubjectiveGame(GameEnvironment):
         GameEnvironment.performAction(self, action)
         if action is not None:
             self._drawState()
-            pygame.time.wait(self._actionDelay)
+            pygame.time.wait(self.actionDelay)
         
     def _nearTileIncrements(self):
-        p0, p1, orient = self.getState()
+        p0, p1, orient = self.getState()[:3]
         o0, o1 = orient
         l0, l1 = BASEDIRS[(BASEDIRS.index(orient) + 1) % len(BASEDIRS)]
         r0, r1 = BASEDIRS[(BASEDIRS.index(orient) - 1) % len(BASEDIRS)]
@@ -205,10 +205,10 @@ class SubjectiveGame(GameEnvironment):
         
     def _drawState(self):
         self.screen.reset()
-        for oname, ps in self._obstypes.items():
-            b = (oname in blocky)
-            col = self._obscols[oname]
-            for iswall, fid, pos in self._nearTileIncrements():
+        for iswall, fid, pos in self._nearTileIncrements():
+            for oname, ps in self._obstypes.items():
+                b = (oname in blocky)
+                col = self._obscols[oname]
                 if pos in ps:
                     if iswall:
                         self.screen._colorWall(fid, col)
@@ -265,18 +265,26 @@ def test2():
     senv.rollOut(actions)
        
 def test3():
-    from examples.gridphysics.mazes import polarmaze_game, maze_level_1
+    from examples.gridphysics.mazes import polarmaze_game
+    from examples.gridphysics.mazes.simple import maze_level_1b
     from core import VGDLParser
     from pybrain.rl.experiments.episodic import EpisodicExperiment
-    from interfaces import GameTask, InteractiveAgent    
-    game_str, map_str = polarmaze_game, maze_level_1
+    from interfaces import GameTask
+    from agents import InteractiveAgent, UserTiredException    
+    game_str, map_str = polarmaze_game, maze_level_1b
     g = VGDLParser().parseGame(game_str)
     g.buildLevel(map_str)    
-    senv = SubjectiveGame(g, actionDelay=100)
+    senv = SubjectiveGame(g, actionDelay=100, recordingEnabled=True)
+    #senv = GameEnvironment(g, actionDelay=100, recordingEnabled=True, visualize=True)
     task = GameTask(senv)    
     iagent = InteractiveAgent()
     exper = EpisodicExperiment(task, iagent)
-    exper.doEpisodes(1)
+    try:
+        exper.doEpisodes(1)
+    except UserTiredException:
+        pass
+    print senv._allEvents
+    
     
 if  __name__ == "__main__":   
     #test1()
