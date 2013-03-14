@@ -418,9 +418,8 @@ def killSprite(sprite, partner, game):
 def cloneSprite(sprite, partner, game):
     game._createSprite([sprite.name], (sprite.rect.left, sprite.rect.top))
     
-def transformTo(sprite, partner, game, stype=None):
-    if stype:
-        game._createSprite([stype], (sprite.rect.left, sprite.rect.top))
+def transformTo(sprite, partner, game, stype='wall'):
+    game._createSprite([stype], (sprite.rect.left, sprite.rect.top))
     killSprite(sprite, partner, game)
     
 def stepBack(sprite, partner, game):

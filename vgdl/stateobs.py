@@ -105,9 +105,11 @@ class StateObsHandler(object):
         return ss[0]
     
     def setState(self, state):
+        pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
+            
         # no avatar?
         if self._avatar is None:
-            pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
+            assert self.mortalAvatar
             if self.uniqueAvatar:
                 atype = self._avatar_types[0]
             else:
@@ -119,7 +121,6 @@ class StateObsHandler(object):
             atype = state[-1]
             if self._avatar.name != atype:
                 self._game.kill_list.append(self._avatar)
-                pos = (state[0]*self._game.block_size, state[1]*self._game.block_size)
                 self._game._createSprite([atype], pos)            
             
         if not self.uniqueAvatar:
@@ -129,7 +130,7 @@ class StateObsHandler(object):
             state = state[:-1]  
         self._setSpriteState(self._avatar, state)
         self._avatar.lastrect = self._avatar.rect
-        self._avatar.lastmove = 0               
+        self._avatar.lastmove = 0                       
         
     def getState(self):        
         if self._avatar is None:
