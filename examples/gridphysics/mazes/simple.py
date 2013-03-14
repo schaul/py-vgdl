@@ -12,6 +12,14 @@ wAw  w
 wwwwww
 """
 
+maze_level_1b = """
+wwwwww
+w   Gw
+w  w w
+wA  ww
+wwwwww
+"""
+
 maze_level_2 = """
 wwwwwwwwwwwww
 wA       w  w

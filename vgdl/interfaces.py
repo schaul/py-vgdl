@@ -134,7 +134,7 @@ class GameTask(EpisodicTask):
     """ A minimal Task wrapper that only considers win/loss information. """
     _ended = False
     
-    maxSteps=100
+    maxSteps = None
     
     def reset(self):
         self.env.reset()
@@ -148,9 +148,12 @@ class GameTask(EpisodicTask):
             else:
                 return -1
         return 0
-    
+        
     def isFinished(self):
-        return self._ended or self.samples >= self.maxSteps
+        if self.maxSteps is not None:
+            if self.samples >= self.maxSteps:
+                return True
+        return self._ended
 
 
    
@@ -244,7 +247,7 @@ def testRecordingToGif(human=False):
     res = exper.doEpisodes(1)
     print res
     
-    actions = [a for _,a,_ in env._allEvents]
+    actions = [a for _, a, _ in env._allEvents]
     print actions
     makeGifVideo(env, actions, initstate=env._initstate)
     
@@ -269,7 +272,7 @@ wwwwwwwwwwwww
     from examples.gridphysics.mazes.rigidzelda import rigidzelda_game
     g = VGDLParser().parseGame(rigidzelda_game)
     g.buildLevel(zelda_level2)
-    env = GameEnvironment(g, visualize=False, 
+    env = GameEnvironment(g, visualize=False,
                           recordingEnabled=True, actionDelay=150)
     C = MDPconverter(g, env=env, verbose=True)
     Ts, R, _ = C.convert()
