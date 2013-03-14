@@ -255,7 +255,8 @@ class BasicGame(object):
     def _eventHandling(self):
         for g1, g2, effect, args in self.collision_eff:
             for s1, s2 in set(self.lastcollisions[(g1, g2)]):
-                if s1 not in self.kill_list and s2 not in self.kill_list:
+                # TODO: this is not a bullet-proof way, but seems to work
+                if s1 not in self.kill_list:
                     effect(s1, s2, self, **args)
                                             
     def startGame(self):        

@@ -72,7 +72,8 @@ class GameEnvironment(Environment, StateObsHandler):
         if self.visualize and self._avatar is not None:
             self._avatar._clear(self._game.screen, self._game.background)        
         StateObsHandler.setState(self, state)        
-        self._game._clearAll(self.visualize)            
+        self._game._clearAll(self.visualize)  
+        assert len(self._game.kill_list) ==0          
         
     def performAction(self, action, onlyavatar=False):
         """ Action is an index for the actionset.  """
@@ -80,10 +81,8 @@ class GameEnvironment(Environment, StateObsHandler):
             return   
         # take action and compute consequences
         self._avatar._readMultiActions = lambda * x: [self._actionset[action]]        
-
-        if self.visualize:
-            self._game._clearAll(self.visualize)            
-
+        self._game._clearAll(self.visualize)
+        
         # update sprites 
         if onlyavatar:
             self._avatar.update(self._game)

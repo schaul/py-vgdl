@@ -26,12 +26,12 @@ BasicGame frame_rate=10
             door   > color=LIGHTGREEN
             key    > color=YELLOW     
             sword  > color=RED
-            slash  > Flicker limit=5  singleton=True
-            avatar  > MovingAvatar 
-                naked   > 
-                nokey   > color=RED
-                withkey > color=YELLOW
             monster > color=ORANGE
+        slash  > Flicker limit=5  singleton=True            
+        avatar  > MovingAvatar 
+            naked   > 
+            nokey   > color=RED
+            withkey > color=YELLOW
     LevelMapping
         G > goal
         k > key        
@@ -42,14 +42,14 @@ BasicGame frame_rate=10
     InteractionSet
         avatar wall    > stepBack
         nokey door     > stepBack
+        nokey key      > transformTo stype=withkey
+        naked sword    > transformTo stype=nokey                
         goal avatar    > killSprite        
         monster nokey  > killSprite        
         naked monster  > killSprite
         withkey monster> killSprite
         key  avatar    > killSprite
         sword avatar   > killSprite
-        nokey key   > transformTo stype=withkey
-        naked sword > transformTo stype=nokey                
     TerminationSet
         SpriteCounter stype=goal   limit=0 win=True
         SpriteCounter stype=avatar limit=0 win=False              
