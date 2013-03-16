@@ -69,6 +69,11 @@ class VGDLParser(object):
             key, sdef = [x.strip() for x in sn.content.split(">")]
             sclass, args = self._parseArgs(sdef, parentclass, parentargs.copy())
             stypes = parenttypes+[key]
+            if 'singleton' in args:
+                if args['singleton']==True:
+                    self.game.singletons.append(key)
+                args = args.copy()
+                del args['singleton']
             
             if len(sn.children) == 0:
                 if self.verbose:
@@ -131,6 +136,8 @@ class BasicGame(object):
                               ] 
         # contains instance lists
         self.sprite_groups = defaultdict(list)
+        # which sprite types (abstract or not) are singletons?
+        self.singletons = []
         # collision effects (ordered by execution order)
         self.collision_eff = []
         # for reading levels
@@ -171,18 +178,21 @@ class BasicGame(object):
         self.sprite_order.append('avatar')        
                         
     def _createSprite(self, keys, pos):
+        res = []
         for key in keys:
             if self.num_sprites > self.MAX_SPRITES:
                 print "Sprite limit reached."
                 return
             sclass, args, stypes = self.sprite_constr[key] 
-            if 'singleton' in args and args['singleton']==True:
-                if len(self.sprite_groups[key]) > 0:                    
-                    continue
-                else:
-                    args = args.copy()
-                    del args['singleton']
-            
+            # verify the singleton condition
+            anyother = False
+            for pk in stypes[::-1]:
+                if pk in self.singletons:
+                    if self.numSprites(pk) > 0:
+                        anyother = True
+                        break
+            if anyother:
+                continue
             s = sclass(pos=pos, size=(self.block_size, self.block_size), **args)
             s.stypes = stypes
             s.name = key
@@ -190,6 +200,8 @@ class BasicGame(object):
             self.num_sprites += 1
             if s.is_stochastic:
                 self.is_stochastic = True
+            res.append(s)
+        return res
             
     def _initScreen(self, size):
         from ontology import LIGHTGRAY
