@@ -10,8 +10,8 @@ pacman_game = """
 BasicGame
     SpriteSet
         food > Immovable
-            pellet > color=WHITE
-            power  > color=LIGHTGREEN
+            pellet > color=WHITE shrinkfactor=0.8
+            power  > color=LIGHTGREEN shrinkfactor=0.5
         nest > SpawnPoint
             redspawn > stype=red
             orangespawn > stype=orange
