@@ -1,0 +1,91 @@
+'''
+VGDL example: a simplified version of Pacman, with stupid ghosts, but many of the
+other mechanisms working.
+
+@author: Tom Schaul
+'''
+
+
+pacman_game = """
+BasicGame
+    SpriteSet
+        food > Immovable
+            pellet > color=WHITE
+            power  > color=LIGHTGREEN
+        nest > SpawnPoint
+            redspawn > stype=red
+            orangespawn > stype=orange
+            bluespawn > stype=blue
+            pinkspawn > stype=pink
+        moving >
+            ghost > Chaser stype=hungry cooldown=3
+                red    > color=LIGHTRED    singleton=True
+                blue   > color=LIGHTBLUE   singleton=True
+                pink   > color=PINK        singleton=True
+                orange > color=LIGHTORANGE singleton=True
+            pacman > OrientedAvatar 
+                hungry  > color=YELLOW
+                powered > color=ORANGE            
+            
+    InteractionSet
+        hungry  power > transformTo stype=powered 
+        powered ghost > transformTo stype=hungry
+        power hungry  > killSprite
+        ghost powered > killSprite
+        hungry ghost  > killSprite
+        food pacman > killSprite
+        moving wall > stepBack        
+        moving EOS  > wrapAround        
+        
+    LevelMapping
+        0 > power
+        . > pellet
+        A > hungry
+        1 > redspawn red
+        2 > bluespawn blue
+        3 > pinkspawn pink
+        4 > orangespawn orange
+        
+    TerminationSet
+        SpriteCounter stype=food   win=True     
+        SpriteCounter stype=pacman win=False     
+    
+"""
+
+pacman_level = """
+wwwwwwwwwwwwwwwwwwwwwwwwwwww
+w............ww............w
+w.wwww.wwwww.ww.wwwww.wwww.w
+w0wwww.wwwww.ww.wwwww.wwww0w
+w.wwww.wwwww.ww.wwwww.wwww.w
+w..........................w
+w.wwww.ww.wwwwwwww.ww.wwww.w
+w.wwww.ww.wwwwwwww.ww.wwww.w
+w......ww....ww....ww......w
+wwwwww.wwwww ww wwwww.wwwwww
+wwwwww.wwwww ww wwwww.wwwwww
+wwwwww.ww          ww.wwwwww
+wwwwww.ww          ww.wwwwww
+wwwwww.ww www  www ww.wwwwww
+      .   ww1234ww   .      
+wwwwww.ww wwwwwwww ww.wwwwww
+wwwwww.ww          ww.wwwwww
+wwwwww.ww          ww.wwwwww
+wwwwww.ww wwwwwwww ww.wwwwww
+wwwwww.ww wwwwwwww ww.wwwwww
+w............ww............w
+w.wwww.wwwww.ww.wwwww.wwww.w
+w0wwww.wwwww.ww.wwwww.wwww0w
+w...ww.......A........ww...w
+www.ww.ww.wwwwwwww.ww.ww.www
+www.ww.ww.wwwwwwww.ww.ww.www
+w......ww....ww....ww......w
+w.wwwwwwwwww.ww.wwwwwwwwww.w
+w.wwwwwwwwww.ww.wwwwwwwwww.w
+w..........................w
+wwwwwwwwwwwwwwwwwwwwwwwwwwww
+"""
+
+if __name__ == "__main__":
+    from vgdl.core import VGDLParser
+    VGDLParser.playGame(pacman_game, pacman_level)    
