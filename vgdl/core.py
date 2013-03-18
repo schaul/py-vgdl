@@ -222,11 +222,17 @@ class BasicGame(object):
                 
     def numSprites(self, key):
         """ Abstract sprite groups are computed on demand only """
-        deleted = len([s for s in self.kill_list if s.name==key])
+        deleted = len([s for s in self.kill_list if key in s.stypes])
         if key in self.sprite_groups:
             return len(self.sprite_groups[key])-deleted
         else: 
             return len([s for s in self if key in s.stypes])-deleted
+        
+    def getSprites(self, key):
+        if key in self.sprite_groups:
+            return [s for s in self.sprite_groups[key] if s not in self.kill_list]
+        else:
+            return [s for s in self if key in s.stypes and s not in self.kill_list]
         
     def getAvatars(self):
         """ The currently alive avatar(s) """
