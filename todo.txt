@@ -2,11 +2,9 @@ Game dynamics:
 - resource-type objects (health, heat, ...)
 - direction-based shooting
 - momentum-preserving splits
-- non-square sprites
 - multi-player (mixed human/non-human controllers)
 
 Example games:
-- pacman
 - asteroids
 - pong
 

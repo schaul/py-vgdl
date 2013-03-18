@@ -145,6 +145,7 @@ class BasicGame(object):
         # termination criteria
         self.terminations = [Termination()]
         self.num_sprites = 0
+        self.kill_list=[]        
         self.is_stochastic = False
     
     def buildLevel(self, lstr):        
