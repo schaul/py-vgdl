@@ -329,6 +329,7 @@ class VGDLSprite(object):
     speed    = None   
     mass     = 1
     physicstype=None
+    shrinkfactor=0
     
     def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None, **kwargs):
         self.rect = pygame.Rect(pos, size)
@@ -383,18 +384,23 @@ class VGDLSprite(object):
     
     def _draw(self, screen):
         from ontology import LIGHTGREEN
+        if self.shrinkfactor != 0:
+            shrunk = self.rect.inflate(-self.rect.width*self.shrinkfactor, 
+                                       -self.rect.height*self.shrinkfactor)
+        else:
+            shrunk = self.rect
+            
         if self.is_avatar:
-            shrunk = self.rect.inflate(-self.rect.width/10., -self.rect.height/10.)
             rounded = roundedPoints(shrunk)
             pygame.draw.polygon(screen, self.color, rounded)
-            pygame.draw.lines(screen, LIGHTGREEN, True, rounded, 3)
+            pygame.draw.lines(screen, LIGHTGREEN, True, rounded, 2)
             r = self.rect.copy()
         elif not self.is_static:
-            rounded = roundedPoints(self.rect)
+            rounded = roundedPoints(shrunk)
             pygame.draw.polygon(screen, self.color, rounded)
             r = self.rect.copy()
         else:
-            r = screen.fill(self.color, self.rect)
+            r = screen.fill(self.color, shrunk)
         VGDLSprite.dirtyrects.append(r)
         
     def _clear(self, screen, background, double=False):
@@ -410,7 +416,7 @@ class VGDLSprite(object):
 
 class Avatar(object):
     """ Abstract superclass of all avatars. """
-    
+    shrinkfactor=0.15
    
 class Termination(object):
     """ Base class for all termination criteria. """
