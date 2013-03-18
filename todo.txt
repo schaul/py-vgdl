@@ -1,6 +1,5 @@
 Game dynamics:
 - resource-type objects (health, heat, ...)
-- chasing NPCs
 - direction-based shooting
 - momentum-preserving splits
 - non-square sprites
