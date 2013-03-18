@@ -59,6 +59,13 @@ class GridPhysics():
                 speed = sprite.speed
         if speed != 0 and action is not None:
             sprite._updatePos(action, speed * self.gridsize[0])
+            
+            
+    def distance(self, r1, r2):
+        """ Grid physics use Hamming distances. """
+        return (abs(r1.top - r2.top) 
+                + abs(r1.left - r2.left))
+    
     
 class ContinuousPhysics(GridPhysics):
     gravity = 0.
@@ -81,6 +88,11 @@ class ContinuousPhysics(GridPhysics):
         sprite.orientation = unitVector((v1, v2))        
         sprite.speed = vectNorm((v1, v2)) / vectNorm(sprite.orientation)
         
+    def distance(self, r1, r2):
+        """ Continuous physics use Euclidean distances. """
+        return sqrt((r1.top - r2.top) ** 2 
+                    + (r1.left - r2.left) ** 2)
+
 class GravityPhysics(ContinuousPhysics):
     gravity = 0.5
     
@@ -238,7 +250,53 @@ class Bomber(SpawnPoint, Missile):
         Missile.update(self, game)
         SpawnPoint.update(self, game)
 
-
+class Chaser(RandomNPC):
+    """ Pick an action that will move toward the closest sprite of the provided target type. """
+    stype = None    
+    fleeing = False
+    
+    def _closestTargets(self, game):
+        bestd = 1e100
+        res = []
+        for target in game.getSprites(self.stype):
+            d = self.physics.distance(self.rect, target.rect)
+            if d < bestd:
+                bestd = d
+                res = [target]
+            elif d == bestd:
+                res.append(target)
+        return res
+    
+    def _movesToward(self, game, target):
+        """ Find the canonical direction(s) which move toward
+        the target. """
+        res = []
+        basedist = self.physics.distance(self.rect, target.rect) 
+        for a in BASEDIRS:
+            r = self.rect.copy()
+            r = r.move(a)
+            newdist = self.physics.distance(r, target.rect)
+            if self.fleeing and basedist < newdist:
+                res.append(a)
+            if not self.fleeing and basedist > newdist:
+                res.append(a)
+        return res
+    
+    def update(self, game):
+        VGDLSprite.update(self, game)
+        options = []
+        for target in self._closestTargets(game):
+            options.extend(self._movesToward(game, target))
+        if len(options) == 0:
+            options = BASEDIRS
+        self.physics.activeMovement(self, choice(options))    
+                    
+class Fleeing(Chaser):
+    """ Just reversing directions"""
+    fleeing = True
+    
+    
+    
 # ---------------------------------------------------------------------
 #     Avatars: player-controlled sprite types
 # ---------------------------------------------------------------------
@@ -342,7 +400,7 @@ class LinkAvatar(OrientedAvatar, SpriteProducer):
             u = unitVector(self.orientation)
             newones = game._createSprite([self.stype], (self.lastrect.left + u[0] * self.lastrect.size[0],
                                                        self.lastrect.top + u[1] * self.lastrect.size[1]))
-            if len(newones) >0  and isinstance(newones[0], OrientedSprite):
+            if len(newones) > 0  and isinstance(newones[0], OrientedSprite):
                 newones[0].orientation = unitVector(self.orientation)
                             
 class InertialAvatar(OrientedAvatar):
