@@ -218,6 +218,9 @@ class SubjectiveGame(GameEnvironment):
                         self.screen._colorBlock(fid, col)
         pygame.display.flip()  
         
+        
+
+        
 
 def test1():
     from ontology import GREEN, ORANGE, WHITE
