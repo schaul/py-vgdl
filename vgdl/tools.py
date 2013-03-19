@@ -167,13 +167,16 @@ def featurePlot(size, states, fMap, plotdirections=False):
     if polar and plotdirections:
         for i in range(1, size[0]):
             pylab.plot([i * 2 - 0.5] * 2, [2 - 0.5, (size[1] - 1) * 2 - 0.5], 'k')    
+        for i in range(1, size[1]):
             pylab.plot([2 - 0.49, (size[0] - 1) * 2 - 0.49], [i * 2 - 0.49] * 2, 'k')    
-        pylab.xlim(-0.5, size[0] * 2 - 0.5)
-        pylab.ylim(-0.5, size[1] * 2 - 0.5)
-        for x, y, d in states:
+        for s in states:
+            x, y, d = s[:3]
             o1, o2 = offsets[d]
             pylab.plot([o1 + 2 * x, o1 + 2 * x + d[0] * 0.4], [o2 + 2 * y, o2 + 2 * y + d[1] * 0.4], 'k-')
             pylab.plot([o1 + 2 * x], [o2 + 2 * y], 'k.')
+        pylab.xlim(-0.5, size[0] * 2 - 0.5)
+        pylab.ylim(-0.5, size[1] * 2 - 0.5)
+        
     pylab.xticks([])
     pylab.yticks([])
     
