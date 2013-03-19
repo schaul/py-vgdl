@@ -19,7 +19,7 @@ from vgdl.tools import featurePlot
 from matplotlib import rc
 rc('text', usetex=False)
     
-def plotOptimalValues(gametype, layout, discountFactor=0.9):
+def plotOptimalValues(gametype, layout, discountFactor=0.9, showValue=False):
     # build the game
     g = VGDLParser().parseGame(gametype)
     g.buildLevel(layout)
@@ -33,13 +33,14 @@ def plotOptimalValues(gametype, layout, discountFactor=0.9):
     
     # evaluate the policy
     Vopt = trueValues(Topt, R, discountFactor=discountFactor)
-    
-    # expected discounted reward at initial state
-    Vinit = Vopt[C.initIndex()]
-    
+        
     # plot those values    
-    featurePlot((g.width, g.height), C.states, Vopt)
-    pylab.xlabel("V0=%.4f"%Vinit)
+    featurePlot((g.width, g.height), C.states, Vopt, plotdirections=True)
+    
+    if showValue:
+        # expected discounted reward at initial state
+        Vinit = Vopt[C.initIndex()]
+        pylab.xlabel("V0=%.4f"%Vinit)
     
     
 def test1():
@@ -85,8 +86,18 @@ def test4():
     res = exper.doEpisodes(5)
     print res
     
+def test5():
+    from examples.gridphysics.mazes.mazegames import maze_game, flippolarmaze_game
+    from examples.gridphysics.mazes.noisyobservations import maze_89
+    pylab.subplot(1,2,1)
+    plotOptimalValues(maze_game, maze_89)
+    pylab.subplot(1,2,2)
+    plotOptimalValues(flippolarmaze_game, maze_89)
+    pylab.show()
+    
 if __name__ == '__main__':
     #test1()
     #test2()
     #test3()
-    test4()
+    #test4()
+    test5()

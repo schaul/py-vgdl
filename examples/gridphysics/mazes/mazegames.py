@@ -40,3 +40,10 @@ polarmaze_game = commonmaze_game +"""
     TerminationSet
         SpriteCounter stype=goal limit=0 win=True
 """
+
+
+flippolarmaze_game = commonmaze_game +"""
+        avatar   > RotatingFlippingAvatar
+    TerminationSet
+        SpriteCounter stype=goal limit=0 win=True
+"""

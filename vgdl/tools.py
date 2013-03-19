@@ -174,8 +174,12 @@ def featurePlot(size, states, fMap, plotdirections=False):
             o1, o2 = offsets[d]
             pylab.plot([o1 + 2 * x, o1 + 2 * x + d[0] * 0.4], [o2 + 2 * y, o2 + 2 * y + d[1] * 0.4], 'k-')
             pylab.plot([o1 + 2 * x], [o2 + 2 * y], 'k.')
+    if polar:
         pylab.xlim(-0.5, size[0] * 2 - 0.5)
         pylab.ylim(-0.5, size[1] * 2 - 0.5)
+    else:
+        pylab.xlim(-0.5, size[0] - 0.5)
+        pylab.ylim(-0.5, size[1] - 0.5)
         
     pylab.xticks([])
     pylab.yticks([])

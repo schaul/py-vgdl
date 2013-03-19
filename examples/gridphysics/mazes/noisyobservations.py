@@ -9,7 +9,7 @@ and its subjective observations are stochastic.
 maze_89 = """
 wwwwwwwww
 ww     ww
-w Aw w  w
+wA w w  w
 ww w w ww
 w  w w Gw
 ww     ww
