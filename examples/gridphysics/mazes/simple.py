@@ -25,8 +25,8 @@ wwwwwwwwwwwww
 wA       w  w
 w   w   w  ww
 www w   wwwww
-w       w G w
-w    w     ww
+w       wwG w
+w    w      w
 wwwwwwwwwwwww
 """
 
