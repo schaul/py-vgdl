@@ -16,6 +16,7 @@ BasicGame
            
     InteractionSet
         avatar wall > killSprite 
+        avatar EOS > killSprite 
         pad avatar  > killIfSlow    # relative velocity
         
     LevelMapping
@@ -24,17 +25,16 @@ BasicGame
 
 lander_level = """
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
-w        w    w            w
-w    A    wwww             w
-w                          w
-w                          w
-w                          w
-w                          w
-w                     www  w
-w                    wwww  w
-w       w        wwwwwwwwGGw
-w      wwwwwGGGwwwwwwwwwwwww
-w    wwwwwwwwwwwwwwwwwwwwwww
+         w    w            w
+     A    wwww              
+                            
+                            
+                            
+                      www   
+                     wwww  w
+        w        wwwwwwwwGGw
+       wwwwwGGGwwwwwwwwwwwww
+     wwwwwwwwwwwwwwwwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwww
 """
 

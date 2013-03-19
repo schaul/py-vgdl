@@ -10,7 +10,7 @@ commonmaze_game = """
 BasicGame 
     LevelMapping
         m > wallmark
-        . > floortile
+        . > floortile 
         G > goal
         2 > portalentry
         3 > portalexit
@@ -25,7 +25,7 @@ BasicGame
     SpriteSet         
         structure > Immovable
             wallmark     > color=ORANGE
-            floortile    > color=WHITE
+            floortile    > color=WHITE shrinkfactor=0.5
             goal         > color=GREEN
             portalentry  > Portal color=BLUE stype=portalexit
             portalexit   > color=BROWN"""
