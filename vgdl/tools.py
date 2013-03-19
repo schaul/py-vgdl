@@ -137,7 +137,7 @@ def featurePlot(size, states, fMap, plotdirections=False):
     
     Light blue corresponds to non-state positions. """
     from ontology import LEFT, RIGHT, UP, DOWN
-    if len(states[0]) > 2:
+    if len(states[0]) > 3:
         polar = True
         M = ones((size[0] * 2, size[1] * 2))
         offsets = {LEFT: (1, 0),
@@ -156,11 +156,11 @@ def featurePlot(size, states, fMap, plotdirections=False):
     for si, s in enumerate(states):
         obs = fMap[si]
         if polar:
-            x, y, d = s
+            x, y, d = s[:3]
             o1, o2 = offsets[d]
             M[2 * x + o1, 2 * y + o2] = obs
         else:
-            x, y = s
+            x, y = s[:2]
             M[x, y] = obs
     
     pylab.imshow(-M.T, cmap=cmap, interpolation='nearest', vmin=vmin, vmax=vmax) 

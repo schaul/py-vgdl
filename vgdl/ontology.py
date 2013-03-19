@@ -217,7 +217,6 @@ class Walker(Missile):
 class WalkJumper(Walker):
     prob = 0.1
     strength = 10
-    is_stochastic = True         
     def update(self, game):
         if self.lastdirection[0] == 0:
             if self.prob < random():
@@ -389,6 +388,40 @@ class RotatingAvatar(OrientedSprite, MovingAvatar):
             self.orientation = BASEDIRS[(i - 1) % len(BASEDIRS)]    
         VGDLSprite.update(self, game)
         self.speed = 0
+                    
+class RotatingFlippingAvatar(RotatingAvatar):                
+    """ Uses a different action set: DOWN makes it spin around 180 degrees.
+    Optionally, a noise level can be specified
+    """
+    
+    noiseLevel = 0
+    
+    def update(self, game):
+        actions = self._readMultiActions(game)
+        if len(actions) > 0 and self.noiseLevel > 0:
+            # pick a random one instead
+            if random() < self.noiseLevel*4:
+                actions = [choice([UP, LEFT, DOWN, RIGHT])]
+        if UP in actions:
+            self.speed = 1
+        elif DOWN in actions:
+            i = BASEDIRS.index(self.orientation)
+            self.orientation = BASEDIRS[(i + 2) % len(BASEDIRS)]
+        elif LEFT in actions:
+            i = BASEDIRS.index(self.orientation)
+            self.orientation = BASEDIRS[(i + 1) % len(BASEDIRS)]
+        elif RIGHT in actions:
+            i = BASEDIRS.index(self.orientation)
+            self.orientation = BASEDIRS[(i - 1) % len(BASEDIRS)]    
+        VGDLSprite.update(self, game)
+        self.speed = 0
+        
+    @property
+    def is_stochastic(self):
+        return self.noiseLevel > 0
+        
+class NoisyRotatingFlippingAvatar(RotatingFlippingAvatar):
+    noiseLevel = 0.1
         
 class LinkAvatar(OrientedAvatar, SpriteProducer):
     """ Link can use his sword in front of him. """

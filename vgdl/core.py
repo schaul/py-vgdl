@@ -21,6 +21,23 @@ class VGDLParser(object):
         g = VGDLParser().parseGame(game_str)
         g.buildLevel(map_str)
         g.startGame()
+        
+    @staticmethod
+    def playSubjectiveGame(game_str, map_str):
+        from pybrain.rl.experiments.episodic import EpisodicExperiment
+        from interfaces import GameTask
+        from subjective import SubjectiveGame
+        from agents import InteractiveAgent, UserTiredException   
+        g = VGDLParser().parseGame(game_str)
+        g.buildLevel(map_str)    
+        senv = SubjectiveGame(g, actionDelay=100, recordingEnabled=True)
+        task = GameTask(senv)    
+        iagent = InteractiveAgent()
+        exper = EpisodicExperiment(task, iagent)
+        try:
+            exper.doEpisodes(1)
+        except UserTiredException:
+            pass
                
     def parseGame(self, tree):
         """ Accepts either a string, or a tree. """        
@@ -122,10 +139,17 @@ class BasicGame(object):
                        'A': ['avatar'],
                        }
     
-    def __init__(self, block_size=10, frame_rate=20):
+    block_size = 10
+    frame_rate = 20
+    
+    def __init__(self, **kwargs):
         from ontology import Immovable, DARKGRAY, MovingAvatar
-        self.block_size = block_size
-        self.frame_rate = frame_rate
+        for name, value in kwargs.items():
+            if hasattr(self, name):
+                self.__dict__[name] = value
+            else:
+                print "WARNING: undefined parameter '%s' for game! "%(name)
+        
         # contains mappings to constructor (just a few defaults are known)
         self.sprite_constr = {'wall': (Immovable, {'color': DARKGRAY}, ['wall']),
                               'avatar': (MovingAvatar, {}, ['avatar']),
@@ -184,7 +208,7 @@ class BasicGame(object):
             if self.num_sprites > self.MAX_SPRITES:
                 print "Sprite limit reached."
                 return
-            sclass, args, stypes = self.sprite_constr[key] 
+            sclass, args, stypes = self.sprite_constr[key]
             # verify the singleton condition
             anyother = False
             for pk in stypes[::-1]:
