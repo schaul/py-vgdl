@@ -33,7 +33,7 @@ BasicGame
     SpriteSet
         goodies > Immovable
             gold > color=YELLOW
-            gem  > color=GREEN
+            gem  > color=GREEN shrinkfactor=0.6
         shovel > OrientedFlicker limit=2 color=LIGHTGRAY
         weapon > singleton=True color=ORANGE
             boulder > Missile  speed=0.2 

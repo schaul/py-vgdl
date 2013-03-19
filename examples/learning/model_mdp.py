@@ -74,7 +74,8 @@ def test4():
     """ Same thing, but animated. """
     from examples.gridphysics.mazes.windy import windy_stoch_game, windy_level
     from pybrain.rl.experiments.episodic import EpisodicExperiment
-    from vgdl.interfaces import GameEnvironment, GameTask, PolicyDrivenAgent 
+    from vgdl.interfaces import GameEnvironment, GameTask
+    from vgdl.agents import PolicyDrivenAgent 
     g = VGDLParser().parseGame(windy_stoch_game)
     g.buildLevel(windy_level)
     env = GameEnvironment(g, visualize=True, actionDelay=100)

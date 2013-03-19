@@ -1,5 +1,6 @@
 """
-The "fovea" benchmark from our 2011 IJCAI paper. It only becomes interesting with the right limited observation setup. 
+The "fovea" benchmark from our 2011 IJCAI paper. It only becomes interesting 
+with the right limited observation setup. 
 
 @author: Tom Schaul
 """
