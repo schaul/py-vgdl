@@ -8,6 +8,7 @@ These are based on the PyBrain RL framework of Environment and Task classes.
 '''
 
 from numpy import zeros
+from random import choice
 import pygame    
 
 from pybrain.rl.environments.environment import Environment
@@ -47,6 +48,9 @@ class GameEnvironment(Environment, StateObsHandler):
         if self.visualize:
             self._game._initScreen(self._game.screensize)
         self.setState(self._initstate)
+        # if no avatar starting location is specified, the default one will be to place it randomly
+        self._game.randomizeAvatar()    
+            
         self._game.kill_list = []
         if self.visualize:
             pygame.display.flip()    
@@ -88,7 +92,6 @@ class GameEnvironment(Environment, StateObsHandler):
                 # vector represents probabilities
                 action = drawIndex(action)
             else:
-                print 'oo'
                 action = argmax(action) 
     
         

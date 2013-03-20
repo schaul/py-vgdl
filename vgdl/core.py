@@ -201,7 +201,26 @@ class BasicGame(object):
         # guarantee that avatar is always visible        
         self.sprite_order.remove('avatar')
         self.sprite_order.append('avatar')        
-                        
+        
+    def emptyBlocks(self):
+        alls = [s for s in self]
+        res = []
+        for col in range(self.width):
+            for row in range(self.height):
+                r = pygame.Rect((col*self.block_size, row*self.block_size), (self.block_size, self.block_size))
+                free = True
+                for s in alls:
+                    if r.colliderect(s.rect):
+                        free = False
+                        break
+                if free:
+                    res.append((col*self.block_size, row*self.block_size))
+        return res
+    
+    def randomizeAvatar(self):
+        if len(self.getAvatars()) == 0:        
+            self._createSprite(['avatar'], choice(self.emptyBlocks()))        
+                    
     def _createSprite(self, keys, pos):
         res = []
         for key in keys:

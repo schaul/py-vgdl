@@ -39,7 +39,7 @@ BasicGame
             boulder > Missile  speed=0.2 
             resting > Immovable speed=0
         moving > 
-            avatar  > LinkAvatar stype=shovel
+            avatar  > ShootAvatar stype=shovel
             monster > Missile color=RED orientation=DOWN cooldown=4
             falling > Missile orientation=DOWN color=YELLOW speed=0.5
         entrance > SpawnPoint total=5 cooldown=200 stype=monster

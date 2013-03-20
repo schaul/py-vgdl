@@ -24,7 +24,7 @@ BasicGame
     key   > Immovable color=ORANGE
     sword > Flicker limit=5 singleton=True
     movable > 
-      avatar  > LinkAvatar   stype=sword 
+      avatar  > ShootAvatar   stype=sword 
         nokey   >
         withkey > color=ORANGE
       monster > RandomNPC cooldown=4 

@@ -69,7 +69,7 @@ def ringworld(width):
     level += ["w"]+[" "]*width+["w\n"]
     level += ["w"]*(width+2)+["\n"]
     level[int(width*1.5+3.5)] = 'G'    
-    level[-(width+5)] = 'A'    
+    #level[-(width+5)] = 'A'    
     level_str = ''.join(level)
     return level_str
     
@@ -77,5 +77,9 @@ def ringworld(width):
 if __name__ == "__main__":
     print ringworld(9)    
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(wrapmaze_game, ringworld(19))
+    g = VGDLParser().parseGame(wrapmaze_game)
+    g.buildLevel(ringworld(19))
+    g.randomizeAvatar()
+    g.startGame()
+            
     VGDLParser.playGame(portalmaze_game, portalringworld(19))
