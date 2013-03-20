@@ -14,7 +14,7 @@ from pybrain.rl.learners.modelbased import LSPI_policy, trueValues, LSTD_PI_poli
 
 from vgdl.mdpmap import MDPconverter
 from vgdl.core import VGDLParser
-from vgdl.tools import featurePlot
+from vgdl.plotting import featurePlot
 
 
 
