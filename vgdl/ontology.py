@@ -423,8 +423,8 @@ class RotatingFlippingAvatar(RotatingAvatar):
 class NoisyRotatingFlippingAvatar(RotatingFlippingAvatar):
     noiseLevel = 0.1
         
-class LinkAvatar(OrientedAvatar, SpriteProducer):
-    """ Link can use his sword in front of him. """
+class ShootAvatar(OrientedAvatar, SpriteProducer):
+    """ Produces a sprite in front of it (e.g., Link using his sword). """
     def __init__(self, stype=None, **kwargs):
         self.stype = stype
         OrientedSprite.__init__(self, **kwargs)

@@ -9,7 +9,7 @@ Managing states and observations, for different types of games
 import pygame
 from pybrain.utilities import setAllArgs
 
-from ontology import RotatingAvatar, BASEDIRS, GridPhysics, LinkAvatar, kill_effects
+from ontology import RotatingAvatar, BASEDIRS, GridPhysics, ShootAvatar, kill_effects
 from core import Avatar
 from tools import listRotate
 
@@ -50,7 +50,7 @@ class StateObsHandler(object):
             if issubclass(sclass, Avatar):
                 self._abs_avatar_types += stypes[:-1]
                 self._avatar_types += [stypes[-1]]
-                if issubclass(sclass, RotatingAvatar) or issubclass(sclass, LinkAvatar):
+                if issubclass(sclass, RotatingAvatar) or issubclass(sclass, ShootAvatar):
                     self.orientedAvatar = True
             if skey not in game.sprite_groups:
                 continue 

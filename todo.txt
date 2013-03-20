@@ -8,6 +8,10 @@ Example games:
 - asteroids
 - pong
 
+Interfaces
+- longer-range subjective vision
+- more diverse observable feature representations
+
 Other:
 - nicer graphics, possibly based on palettes
-- full score system
+- full score system, intermediate rewards
