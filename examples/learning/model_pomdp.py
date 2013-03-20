@@ -18,14 +18,14 @@ from vgdl.tools import featurePlot
 
 
 
-def plotLSPIValues(gametype, layout, discountFactor=0.9, useTD=False):
+def plotLSPIValues(gametype, layout, discountFactor=0.9, useTD=False, showValue=False):
     # build the game
     g = VGDLParser().parseGame(gametype)
     g.buildLevel(layout)
     
     # transform into an MDP and the mapping to observations
     C = MDPconverter(g)
-    Ts, R, fMap = C.convert()
+    Ts, R, fMap = C.convert()    
     
     # find the the best least-squares approximation to the policy,
     # given only observations, not the state information
@@ -38,14 +38,15 @@ def plotLSPIValues(gametype, layout, discountFactor=0.9, useTD=False):
     
     # evaluate the policy
     Vlspi = trueValues(Tlspi, R, discountFactor=discountFactor)
-    
-    # expected discounted reward at initial state
-    Vinit = Vlspi[C.initIndex()]
-    
+        
     # plot those values    
     featurePlot((g.width, g.height), C.states, Vlspi)
-    pylab.xlabel("V0=%.4f"%Vinit)
     
+    if showValue:
+        # expected discounted reward at initial state
+        Vinit = Vlspi[C.initIndex()]
+        pylab.xlabel("V0=%.4f"%Vinit)
+        
 def test1():
     """ Simple maze """
     from examples.gridphysics.mazes.mazegames import maze_game

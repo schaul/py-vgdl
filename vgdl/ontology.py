@@ -529,6 +529,7 @@ def transformTo(sprite, partner, game, stype='wall'):
 def stepBack(sprite, partner, game):
     """ Revert last move. """
     sprite.rect = sprite.lastrect   
+        
     
 def undoAll(sprite, partner, game):
     """ Revert last moves of all sprites. """
@@ -553,7 +554,7 @@ def windGust(sprite, partner, game):
     (step, step-1 and step+1 are equally likely) """
     s = choice([partner.strength, partner.strength + 1, partner.strength - 1])
     if s != 0:
-        tmp = sprite.lastrect
+        tmp = sprite.lastrect.copy()
         v = unitVector(partner.orientation)
         sprite.physics.activeMovement(sprite, v, speed=s)
         sprite.lastrect = tmp
