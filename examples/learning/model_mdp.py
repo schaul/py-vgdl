@@ -13,7 +13,7 @@ from pybrain.rl.learners.modelbased import policyIteration, trueValues
 
 from vgdl.mdpmap import MDPconverter
 from vgdl.core import VGDLParser
-from vgdl.tools import featurePlot
+from vgdl.plotting import featurePlot
 
 
 from matplotlib import rc
