@@ -7,7 +7,6 @@ Here: a deterministic and a stochastic version.
 
 windy_level = """
 wwwwwwwwwwww
-wwwwwwwwwwww
 w          w
 w   ...... w
 w   ...--. w
@@ -37,18 +36,21 @@ BasicGame
         SpriteCounter stype=goal limit=0 win=True
         
     InteractionSet
-        avatar wall        > undoAll
         goal avatar        > killSprite"""
 
 windy_det_game = windymaze_game+"""
         avatar wind        > conveySprite
+        avatar wall        > stepBack
+        
 """
 windy_stoch_game = windymaze_game+"""
         avatar wind        > windGust
+        avatar wall        > stepBack
+        
 """
 
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(windy_det_game, windy_level)
+    #VGDLParser.playGame(windy_det_game, windy_level)
     VGDLParser.playGame(windy_stoch_game, windy_level)
