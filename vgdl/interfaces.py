@@ -34,7 +34,7 @@ class GameEnvironment(Environment, StateObsHandler):
     
     # Recording events (in slightly redundant format state-action-nextstate)
     recordingEnabled = False
-    
+        
     def __init__(self, game, actionset=BASEDIRS, **kwargs):
         StateObsHandler.__init__(self, game, **kwargs)
         self._actionset = actionset
@@ -79,8 +79,21 @@ class GameEnvironment(Environment, StateObsHandler):
         """ Action is an index for the actionset.  """
         if action is None:
             return   
+        # if actions are given as a vector, pick the argmax
+        import numpy
+        from scipy import argmax
+        from pybrain.utilities import drawIndex
+        if isinstance(action, numpy.ndarray):
+            if abs(sum(action) -1) < 1e5:
+                # vector represents probabilities
+                action = drawIndex(action)
+            else:
+                print 'oo'
+                action = argmax(action) 
+    
+        
         # take action and compute consequences
-        self._avatar._readMultiActions = lambda * x: [self._actionset[action]]        
+        self._avatar._readMultiActions = lambda *x: [self._actionset[action]]        
         self._game._clearAll(self.visualize)
         
         # update sprites 
