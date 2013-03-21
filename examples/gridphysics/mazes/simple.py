@@ -91,10 +91,30 @@ w   ww   wwwww
 w m ww m wwwww
 w wwwwww wwwww
 w   ww   wwwww
-w  bww wwwwwww
+w  mww wwwwwww
 w      w    Gw
 wwwwwwAw   www
 w      w m www
+w  mww w wwwww
+w   ww   wwwww
+w wwwwww wwwww
+w   ww m wwwww
+w  mww   wwwww
+w        wwwww
+wwwwwwwwwwwwww
+"""
+
+consistent_corridor = """
+wwwwwwwwwwwwww
+w        wwwww
+w   ww   wwwww
+w m ww m wwwww
+w wwwwww wwwww
+w   ww   wwwww
+w  mww wwwwwww
+w      w    Gw
+wwwwwwAw  mwww
+w      w   www
 w  mww w wwwww
 w   ww   wwwww
 w wwwwww wwwww

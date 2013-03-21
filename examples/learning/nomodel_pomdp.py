@@ -16,8 +16,11 @@ import pylab
 from vgdl.core import VGDLParser
 from vgdl.plotting import featurePlot, addTrajectory
     
+#TODO: random starting points
+#TODO: recording bug with multiple episodes?
     
-def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=300, avgOver=1, returnEvents=False):
+    
+def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=100, avgOver=1, returnEvents=False):
     """ Return the fitness value for one episode of play, given the policy defined by a neural network. """
     task = GameTask(game_env)
     game_env.recordingEnabled = True        
@@ -31,7 +34,7 @@ def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=300, avgOver=1, re
     rs = exper.doEpisodes(avgOver)
     fitness = mean([sum([v*discountFactor**step for step, v in enumerate(r)]) for r in rs])
     # add a slight bonus for more exploration, if rewards are identical
-    fitness += len(set(game_env._allEvents)) * 1e-9
+    fitness += len(set(game_env._allEvents)) * 1e-6
     
     #print len(set(game_env._allEvents)), len(game_env._allEvents)
     if returnEvents:
@@ -41,7 +44,7 @@ def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=300, avgOver=1, re
 
     
 def buildNet(indim, hidden, outdim=2, temperature=1., recurrent=True):
-    from pybrain import FullConnection, BiasUnit, TanhLayer, SoftmaxLayer, RecurrentNetwork, LinearLayer, LinearConnection, FeedForwardNetwork
+    from pybrain import FullConnection, BiasUnit, TanhLayer, SoftmaxLayer, RecurrentNetwork, LinearLayer, LinearConnection, FeedForwardNetwork, SigmoidLayer
     if recurrent:
         net = RecurrentNetwork()
     else:
@@ -49,17 +52,19 @@ def buildNet(indim, hidden, outdim=2, temperature=1., recurrent=True):
     net.addInputModule(LinearLayer(indim, name = 'i'))
     net.addModule(TanhLayer(hidden, name = 'h'))
     net.addModule(BiasUnit('bias'))
-    net.addModule(LinearLayer(outdim, name = 'unscaled'))
+    net.addModule(SigmoidLayer(outdim, name = 'unscaled'))
     net.addOutputModule(SoftmaxLayer(outdim, name = 'o'))
     net.addConnection(FullConnection(net['i'], net['h']))
     net.addConnection(FullConnection(net['bias'], net['h']))
-    net.addConnection(FullConnection(net['bias'], net['o']))
+    net.addConnection(FullConnection(net['bias'], net['unscaled']))
     net.addConnection(FullConnection(net['h'], net['unscaled']))
     lconn = LinearConnection(net['unscaled'], net['o'])
-    lconn._setParameters([1./temperature]*outdim) 
+    lconn._setParameters([1./temperature]*outdim)
+    # these are fixed. 
+    lconn.paramdim = 0
     net.addConnection(lconn)
     if recurrent:
-        net.addRecurrentConnection(FullConnection(net['o'], net['h']))
+        net.addRecurrentConnection(FullConnection(net['h'], net['h']))
     net.sortModules()
     print  net
     print 'number of parameters', net.paramdim
@@ -134,17 +139,17 @@ def test2():
     pylab.show()
     
 def test3():
-    from examples.gridphysics.mazes.simple import office_layout_2
+    from examples.gridphysics.mazes.simple import office_layout_2, consistent_corridor
     from examples.gridphysics.mazes import polarmaze_game
     from pybrain.optimization import SNES
     g = VGDLParser().parseGame(polarmaze_game)
-    g.buildLevel(office_layout_2)
+    g.buildLevel(consistent_corridor)
     game_env = GameEnvironment(g)
-    net = buildNet(game_env.outdim, 3, 4, temperature=1e-5, recurrent=False)
+    net = buildNet(game_env.outdim, 4, 4, temperature=0.05, recurrent=False)
     
-    algo = SNES(lambda x: someEpisodes(game_env, x), net, verbose=True, desiredEvaluation=0.73)
-    rows, cols = 3,3
-    episodesPerStep = 5
+    algo = SNES(lambda x: someEpisodes(game_env, x), net, verbose=True, desiredEvaluation=0.78)
+    rows, cols = 2,2
+    episodesPerStep = 3
     for i in range(rows*cols):
         pylab.subplot(rows, cols, i+1)
         algo.learn(episodesPerStep)
