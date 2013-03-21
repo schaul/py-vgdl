@@ -7,7 +7,7 @@ Video game description language -- plotting functions.
 import pylab
 from scipy import ones
 from pylab import cm
-
+from random import random
 
 def featurePlot(size, states, fMap, plotdirections=False):
     """ Visualize a feature that maps each state in a maze to a continuous value.  
@@ -66,7 +66,23 @@ def featurePlot(size, states, fMap, plotdirections=False):
     pylab.xticks([])
     pylab.yticks([])
     
-def addTrajectory(size, state_seq, color):
+def addTrajectory(state_seq, color='r'):
     """ Draw the trajectory corresponding to a sequence of states on top of a featureplot. """
+    def transform(s):
+        x, y = s[:2]
+        x += random() * 0.6 - 0.3
+        y += random() * 0.6 - 0.3
+        if len(s) > 3:
+            x = x * 2 + 0.5
+            y = y * 2 + 0.5
+        return x, y
+     
+    oldx, oldy = transform(state_seq[0])
     
+    for s in state_seq[1:]:
+        x, y = transform(s)
+        pylab.plot([oldx, x], [oldy, y], '.-' + color)
+        oldx, oldy = x, y
+        
+        
     

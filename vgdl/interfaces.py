@@ -8,7 +8,6 @@ These are based on the PyBrain RL framework of Environment and Task classes.
 '''
 
 from numpy import zeros
-from random import choice
 import pygame    
 
 from pybrain.rl.environments.environment import Environment
