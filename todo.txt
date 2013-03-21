@@ -15,4 +15,4 @@ Interfaces
 Other:
 - nicer graphics, possibly based on palettes
 - full score system, intermediate rewards
-- visualize continuous/discrete trajectories
+- visualize continuous trajectories
