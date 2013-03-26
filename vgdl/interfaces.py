@@ -55,8 +55,8 @@ class GameEnvironment(Environment, StateObsHandler):
             pygame.display.flip()    
         if self.recordingEnabled:
             self._last_state = self.getState()
-            self._allEvents = []                
-    
+            self._allEvents = []              
+            
     def getSensors(self, state=None):
         if state is None:
             state = self.getState()
@@ -89,7 +89,9 @@ class GameEnvironment(Environment, StateObsHandler):
         if isinstance(action, numpy.ndarray):
             if abs(sum(action) -1) < 1e5:
                 # vector represents probabilities
+                #print action
                 action = drawIndex(action)
+                #print action,
             else:
                 action = argmax(action) 
     
@@ -151,6 +153,7 @@ class GameTask(EpisodicTask):
     maxSteps = None
     
     def reset(self):
+        EpisodicTask.reset(self)
         self.env.reset()
         self._ended = False
         
