@@ -89,9 +89,7 @@ class GameEnvironment(Environment, StateObsHandler):
         if isinstance(action, numpy.ndarray):
             if abs(sum(action) -1) < 1e5:
                 # vector represents probabilities
-                #print action
                 action = drawIndex(action)
-                #print action,
             else:
                 action = argmax(action) 
     
