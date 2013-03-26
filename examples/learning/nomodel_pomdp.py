@@ -31,11 +31,15 @@ def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=100, avgOver=1, re
     agent.learning = False
     agent.logging = False
     exper = EpisodicExperiment(task, agent)
-    rs = exper.doEpisodes(avgOver)
-    fitness = mean([sum([v*discountFactor**step for step, v in enumerate(r)]) for r in rs])
-    # add a slight bonus for more exploration, if rewards are identical
-    fitness += len(set(game_env._allEvents)) * 1e-6
+    fitness = 0
+    for _ in range(avgOver):
+        rs = exper.doEpisodes(1)
+        # add a slight bonus for more exploration, if rewards are identical
+        fitness += len(set(game_env._allEvents)) * 1e-6
+        # the true, discounted reward        
+        fitness += sum([sum([v*discountFactor**step for step, v in enumerate(r)]) for r in rs])
     
+    fitness /= avgOver
     #print len(set(game_env._allEvents)), len(game_env._allEvents)
     if returnEvents:
         return fitness, game_env._allEvents
@@ -161,11 +165,67 @@ def test3():
             break
         print
     pylab.show()
+    
+
+# a maze with loops, and simple reactive solution (stay left) 
+labyrinth1 = """
+wwwwwwwwwwwww
+w       w  ww
+w wwwww ww  w
+w w  ww ww  w
+w w w w w www
+w   w wAw w w
+w  w G w ww w
+w     w     w
+wwwwwwwwwwwww
+"""
+
+labyrinth2 = """
+wwwwwwwwwwwww
+w       ww ww
+w  wwww     w
+w w  wwAww ww
+w w wwwwGw  w
+w   w    ww w
+w  ww ww    w
+w        w ww
+wwwwwwwwwwwww
+"""
+    
+    
+def test4():
+    from numpy import ndarray
+    from examples.gridphysics.mazes import polarmaze_game
+    from pybrain.optimization import SNES, WeightGuessing
+    g = VGDLParser().parseGame(polarmaze_game)
+    g.buildLevel(labyrinth2)
+    game_env = GameEnvironment(g)
+    net = buildNet(game_env.outdim, 4, 2, temperature=0.15, recurrent=False)
+    
+    algo = SNES(lambda x: someEpisodes(game_env, x, avgOver=3), net, verbose=True, desiredEvaluation=0.78)
+    #algo = WeightGuessing(lambda x: someEpisodes(game_env, x), net, verbose=True, desiredEvaluation=0.78)
+    rows, cols = 2,2
+    episodesPerStep = 4
+    for i in range(rows*cols):
+        pylab.subplot(rows, cols, i+1)
+        algo.learn(episodesPerStep)
+        if isinstance(algo.bestEvaluable, ndarray):
+            net._setParameters(algo.bestEvaluable)
+        else:
+            net = algo.bestEvaluable
+        plotBackground(game_env)    
+        plotTrajectories(game_env, net)
+        pylab.title(str((i+1)*episodesPerStep))
+        if algo.desiredEvaluation <= algo.bestEvaluation:
+            break
+        print
+    pylab.show()
 
     
 if __name__ == '__main__':
     #test1()
     #test2()
-    test3()
+    #test3()
+    test4()
     
     
