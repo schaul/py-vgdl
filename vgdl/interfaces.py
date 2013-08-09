@@ -309,5 +309,5 @@ if __name__ == "__main__":
     #testRolloutVideo()
     #testPolicyAgent()
     #testRecordingToGif(human=True)
-    #testRecordingToGif(human=False)
-    testAugmented()
+    testRecordingToGif(human=False)
+    #testAugmented()

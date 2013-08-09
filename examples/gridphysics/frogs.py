@@ -24,7 +24,7 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwww
 frog_game = """
 BasicGame
     SpriteSet
-        forest > SpawnPoint stype=log prob=0.4  delay=10
+        forest > SpawnPoint stype=log prob=0.4  cooldown=10
         structure > Immovable
             water > color=BLUE
             goal  > color=GREEN
@@ -34,7 +34,7 @@ BasicGame
             slowtruck  > speed=0.1  color=RED
         avatar > Frog
         # defining 'wall' last, makes the walls show on top of all other sprites
-        wall > Immovable                       
+        wall > Immovable color=BLACK               
         
     InteractionSet
         goal avatar  > killSprite
