@@ -95,6 +95,9 @@ class ContinuousPhysics(GridPhysics):
         """ Continuous physics use Euclidean distances. """
         return sqrt((r1.top - r2.top) ** 2 
                     + (r1.left - r2.left) ** 2)
+        
+class NoFrictionPhysics(ContinuousPhysics):
+    friction = 0
 
 class GravityPhysics(ContinuousPhysics):
     gravity = 0.5
@@ -309,6 +312,7 @@ class MovingAvatar(VGDLSprite, Avatar):
     color = WHITE    
     speed = 1    
     is_avatar = True
+    alternate_keys=False
     def _readAction(self, game):        
         actions = self._readMultiActions(game)
         if actions:
@@ -318,12 +322,18 @@ class MovingAvatar(VGDLSprite, Avatar):
         
     def _readMultiActions(self, game):
         """ Read multiple simultaneously pressed button actions. """        
-        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
+        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN, K_a, K_s, K_d, K_w 
         res = []
-        if   game.keystate[K_RIGHT]: res += [RIGHT]
-        elif game.keystate[K_LEFT]:  res += [LEFT]
-        if   game.keystate[K_UP]:    res += [UP]
-        elif game.keystate[K_DOWN]:  res += [DOWN]
+        if self.alternate_keys:
+            if   game.keystate[K_d]: res += [RIGHT]
+            elif game.keystate[K_a]:  res += [LEFT]
+            if   game.keystate[K_w]:    res += [UP]
+            elif game.keystate[K_s]:  res += [DOWN]
+        else:
+            if   game.keystate[K_RIGHT]: res += [RIGHT]
+            elif game.keystate[K_LEFT]:  res += [LEFT]
+            if   game.keystate[K_UP]:    res += [UP]
+            elif game.keystate[K_DOWN]:  res += [DOWN]
         return res
 
     def update(self, game):
@@ -339,15 +349,29 @@ class Frog(MovingAvatar):
         MovingAvatar.update(self, game)
         self.drowning_safe = False
         
-class FlakAvatar(MovingAvatar, SpriteProducer):
-    """ Only horizontal moves. Hitting the space button creates a sprite of the 
-    specified type at its location. """
-    color = GREEN            
+        
+class HorizontalAvatar(MovingAvatar):
+    """ Only horizontal moves.  """
     def update(self, game):
         VGDLSprite.update(self, game)        
         action = self._readAction(game)
         if action in [RIGHT, LEFT]:
             self.physics.activeMovement(self, action)
+
+class VerticalAvatar(MovingAvatar):
+    """ Only vertical moves.  """
+    def update(self, game):
+        VGDLSprite.update(self, game)        
+        action = self._readAction(game)
+        if action in [UP, DOWN]:
+            self.physics.activeMovement(self, action)
+        
+class FlakAvatar(HorizontalAvatar, SpriteProducer):
+    """ Hitting the space button creates a sprite of the 
+    specified type at its location. """
+    color = GREEN            
+    def update(self, game):
+        HorizontalAvatar.update(self, game)
         from pygame.locals import K_SPACE
         if self.stype and game.keystate[K_SPACE]:
             game._createSprite([self.stype], (self.rect.left, self.rect.top))
