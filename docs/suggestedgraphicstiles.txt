@@ -1,0 +1,15 @@
+man
+explosion
+spaceship
+monster
+alien
+sword
+missile
+bomb
+wall
+water
+key
+coin
+diamond
+mushroom
+flower
