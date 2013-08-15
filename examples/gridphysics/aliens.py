@@ -33,7 +33,7 @@ BasicGame
             sam  > orientation=UP    color=BLUE singleton=True
             bomb > orientation=DOWN  color=RED  speed=0.5
         alien   > Bomber       stype=bomb   prob=0.01  cooldown=3 speed=0.75
-        portal  > SpawnPoint   stype=alien  delay=16   total=20
+        portal  > SpawnPoint   stype=alien  cooldown=16   total=20
     
     LevelMapping
         0 > base
