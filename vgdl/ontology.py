@@ -653,13 +653,12 @@ def flipDirection(sprite, partner, game):
     
 def bounceDirection(sprite, partner, game, friction=0):
     """ The centers of the objects determine the direction"""
-    # TODO: not yet correct
     stepBack(sprite, partner, game)
     inc = sprite.orientation
     snorm = unitVector((-sprite.rect.centerx + partner.rect.centerx,
                         - sprite.rect.centery + partner.rect.centery))
     dp = snorm[0] * inc[0] + snorm[1] * inc[1]
-    sprite.orientation = (2 * dp * snorm[0] - inc[0], 2 * dp * snorm[1] - inc[1])   
+    sprite.orientation = (-2 * dp * snorm[0] + inc[0], -2 * dp * snorm[1] + inc[1])   
     sprite.speed *= (1. - friction)
             
 def wallBounce(sprite, partner, game, friction=0):

@@ -15,7 +15,7 @@ BasicGame
         racket > VerticalAvatar speed=0.25
             avatar      > alternate_keys=True
             otheravatar > color=BLUE 
-        ball > Missile orientation=LEFT speed=5 color=ORANGE physicstype=NoFrictionPhysics
+        ball > Missile orientation=LEFT speed=15 color=ORANGE physicstype=NoFrictionPhysics
             
     TerminationSet # from the perspective of player 1 (on the left)
         SpriteCounter stype=othergoal limit=6 win=False     
@@ -23,8 +23,9 @@ BasicGame
            
     InteractionSet
         goal ball   > killSprite
-        ball racket > wallBounce #bounceDirection
+        ball racket > bounceDirection
         ball wall   > wallBounce
+        racket wall > stepBack
         
     LevelMapping
         - > mygoal
