@@ -23,7 +23,7 @@ BasicGame
   SpriteSet         
     city  > Immovable color=GREEN
     incoming > Chaser stype=city color=ORANGE speed=0.1
-    explosion > Flicker limit=5 singleton=False
+    explosion > Flicker limit=5 
     avatar  > ShootAvatar stype=explosion 
   LevelMapping
     c > city

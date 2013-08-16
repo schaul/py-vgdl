@@ -365,6 +365,7 @@ class VGDLSprite(object):
     dirtyrects = []
     
     is_static= False
+    only_active =False
     is_avatar= False
     is_stochastic = False
     color    = None
@@ -404,7 +405,7 @@ class VGDLSprite(object):
         self.lastrect = self.rect
         # no need to redraw if nothing was updated
         self.lastmove += 1
-        if not self.is_static:
+        if not self.is_static and not self.only_active:
             self.physics.passiveMovement(self)
         
     def _updatePos(self, orientation, speed=None):

@@ -372,6 +372,9 @@ class FlakAvatar(HorizontalAvatar, SpriteProducer):
     color = GREEN            
     def update(self, game):
         HorizontalAvatar.update(self, game)
+        self._shoot(game)
+        
+    def _shoot(self, game):
         from pygame.locals import K_SPACE
         if self.stype and game.keystate[K_SPACE]:
             game._createSprite([self.stype], (self.rect.left, self.rect.top))
@@ -455,6 +458,9 @@ class ShootAvatar(OrientedAvatar, SpriteProducer):
 
     def update(self, game):
         OrientedAvatar.update(self, game)
+        self._shoot(game)
+        
+    def _shoot(self, game):
         from pygame.locals import K_SPACE
         if self.stype and game.keystate[K_SPACE]:
             u = unitVector(self.orientation)
@@ -462,7 +468,39 @@ class ShootAvatar(OrientedAvatar, SpriteProducer):
                                                        self.lastrect.top + u[1] * self.lastrect.size[1]))
             if len(newones) > 0  and isinstance(newones[0], OrientedSprite):
                 newones[0].orientation = unitVector(self.orientation)
-                            
+
+        
+class AimedAvatar(ShootAvatar):
+    """ Can change the direction of firing, but not move. """
+    speed=0
+    angle_diff=0.05
+    def update(self, game):
+        VGDLSprite.update(self, game)
+        self._aim(game)
+        self._shoot(game)
+    
+    def _aim(self, game):
+        action = self._readAction(game)
+        if action in [UP, DOWN]:
+            if action == DOWN:
+                angle = self.angle_diff
+            else:
+                angle = -self.angle_diff
+            from math import cos, sin
+            self.orientation = unitVector((self.orientation[0]*cos(angle)-self.orientation[1]*sin(angle), 
+                                           self.orientation[0]*sin(angle)+self.orientation[1]*cos(angle)))
+        
+class AimedFlakAvatar(AimedAvatar):
+    """ Can move left and right """
+    only_active=True
+    speed=None
+    
+    def update(self, game):
+        AimedAvatar.update(self, game)
+        action = self._readAction(game)
+        if action in [RIGHT, LEFT]:
+            self.physics.activeMovement(self, action)
+            
 class InertialAvatar(OrientedAvatar):
     speed = 1
     physicstype = ContinuousPhysics
