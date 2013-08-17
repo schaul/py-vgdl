@@ -19,9 +19,9 @@ Installation and Dependencies
  
 *  Try examples
 
-          python -m examples.gridphysics.aliens.py
-          python -m examples.gridphysics.frogs.py
-          python -m examples.gridphysics.zelda.py
+          python -m examples.gridphysics.aliens
+          python -m examples.gridphysics.frogs
+          python -m examples.gridphysics.zelda
 
 Features
 --------
