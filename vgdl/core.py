@@ -9,6 +9,10 @@ from random import choice
 from tools import Node, indentTreeParser
 from collections import defaultdict
 from vgdl.tools import roundedPoints
+import os
+import uuid
+import subprocess
+import glob
  
 
 class VGDLParser(object):
@@ -16,11 +20,14 @@ class VGDLParser(object):
     verbose = False
     
     @staticmethod     
-    def playGame(game_str, map_str):
+    def playGame(game_str, map_str, headless = False, persist_movie = False):
         """ Parses the game and level map strings, and starts the game. """
         g = VGDLParser().parseGame(game_str)
         g.buildLevel(map_str)
-        g.startGame()
+        g.uiud = uuid.uuid4()
+        g.startGame(headless, persist_movie )
+        return g
+        
         
     @staticmethod
     def playSubjectiveGame(game_str, map_str):
@@ -247,13 +254,18 @@ class BasicGame(object):
             res.append(s)
         return res
             
-    def _initScreen(self, size):
-        from ontology import LIGHTGRAY
-        pygame.init()    
-        self.screen = pygame.display.set_mode(size)
-        self.background = pygame.Surface(size)
-        self.background.fill(LIGHTGRAY)
-        self.screen.blit(self.background, (0,0))        
+    def _initScreen(self, size,headless):
+        if(headless):
+            os.environ["SDL_VIDEODRIVER"] = "dummy"
+            pygame.display.init()
+            self.screen = pygame.display.set_mode((1,1))
+        else:
+            from ontology import LIGHTGRAY
+            pygame.init()    
+            self.screen = pygame.display.set_mode(size)
+            self.background = pygame.Surface(size)
+            self.background.fill(LIGHTGRAY)
+            self.screen.blit(self.background, (0,0))        
         
     def __iter__(self):
         """ Iterator over all sprites """
@@ -321,14 +333,16 @@ class BasicGame(object):
                 if s1 not in self.kill_list:
                     effect(s1, s2, self, **args)
                                             
-    def startGame(self):        
-        self._initScreen(self.screensize)
+    def startGame(self, headless, persist_movie):        
+        self._initScreen(self.screensize,headless)
         clock = pygame.time.Clock()
         self.time = 0
         self.kill_list=[]
         pygame.display.flip()
         ended = False
         win = False
+        
+        i = 0
         while not ended:
             clock.tick(self.frame_rate) 
             self.time += 1
@@ -349,7 +363,22 @@ class BasicGame(object):
             self._eventHandling()
             self._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
+            
+            #if(headless):
+            if(persist_movie):
+                tmp_dir = "./temp/"
+                tmpl = '{tmp_dir}%09d-{name}-{g_id}.png'.format(i,tmp_dir = tmp_dir, name="VGDL-GAME", g_id=self.uiud)
+                pygame.image.save(self.screen, tmpl%i)
+                            
+                i+=1            
             VGDLSprite.dirtyrects = []
+        
+        if(persist_movie):
+            print "Creating Movie"
+            self.video_file = "./videos/" +  str(self.uiud) + ".mp4" 
+            subprocess.call(["ffmpeg","-y",  "-r", "30", "-b", "800", "-i", tmpl, self.video_file ])
+            [os.remove(f) for f in glob.glob(tmp_dir + "*" + str(self.uiud) + "*")]
+        
             
         if win:
             print "Dude, you're a born winner!"

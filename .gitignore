@@ -1,3 +1,6 @@
 /illust.jpeg
 *.pyc
 /.settings
+/temp
+/videos
+.spyderproject
