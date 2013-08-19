@@ -18,7 +18,7 @@ from vgdl.plotting import featurePlot, addTrajectory
 #TODO: random starting points
     
     
-def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=100, avgOver=1, returnEvents=False):
+def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=100, avgOver=1, returnEvents=False, exploretoo=True):
     """ Return the fitness value for one episode of play, given the policy defined by a neural network. """
     task = GameTask(game_env)
     game_env.recordingEnabled = True        
@@ -33,7 +33,8 @@ def someEpisodes(game_env, net, discountFactor=0.99, maxSteps=100, avgOver=1, re
     for _ in range(avgOver):
         rs = exper.doEpisodes(1)
         # add a slight bonus for more exploration, if rewards are identical
-        fitness += len(set(game_env._allEvents)) * 1e-6
+        if exploretoo:
+            fitness += len(set(game_env._allEvents)) * 1e-6
         # the true, discounted reward        
         fitness += sum([sum([v*discountFactor**step for step, v in enumerate(r)]) for r in rs])
     fitness /= avgOver
@@ -164,18 +165,6 @@ def test3():
     
 
 # a maze with loops, and simple reactive solution (stay left) 
-labyrinth1 = """
-wwwwwwwwwwwww
-w       w   w
-w  www    w w
-w w  wwAwww w
-w w wwwww   w
-w   w  Gww ww
-w  ww www w w
-w     w  w ww
-wwwwwwwwwwwww
-"""
-
 labyrinth2 = """
 wwwwwwwwwwwww
 w       ww ww
@@ -229,6 +218,7 @@ def test5():
     net = buildNet(game_env.outdim, 6, 4, temperature=0.1, recurrent=False)
     
     algo = SNES(lambda x: someEpisodes(game_env, x, avgOver=3, maxSteps=50), net, verbose=True, desiredEvaluation=0.75)
+    print algo.batchSize
     rows, cols = 2,2
     episodesPerStep = 5
     for i in range(rows*cols):
@@ -246,6 +236,45 @@ def test5():
         print
     pylab.show()
 
+# a maze that requires memory
+
+cheese_maze = """
+wwwwwwwwww
+w        w
+w w ww w w
+w wGww wAw
+wwwwwwwwww
+"""
+
+
+def test6():
+    """ Now with memory!"""
+    from numpy import ndarray
+    from examples.gridphysics.mazes import polarmaze_game
+    from pybrain.optimization import SNES
+    g = VGDLParser().parseGame(polarmaze_game)
+    g.buildLevel(cheese_maze)
+    game_env = GameEnvironment(g)
+    net = buildNet(game_env.outdim, 10, 4, temperature=0.1, recurrent=True)
+    
+    algo = SNES(lambda x: someEpisodes(game_env, x, avgOver=6, maxSteps=30, exploretoo=False), net, verbose=True, desiredEvaluation=0.85)
+    print algo.batchSize
+    rows, cols = 2,3
+    episodesPerStep = 5
+    for i in range(rows*cols):
+        pylab.subplot(rows, cols, i+1)
+        algo.learn(episodesPerStep)
+        if isinstance(algo.bestEvaluable, ndarray):
+            net._setParameters(algo.bestEvaluable)
+        else:
+            net = algo.bestEvaluable
+        plotBackground(game_env)    
+        plotTrajectories(game_env, net)
+        pylab.title(str((i+1)*episodesPerStep))
+        if algo.desiredEvaluation <= algo.bestEvaluation:
+            break
+        print
+    pylab.show()
 
     
 if __name__ == '__main__':
@@ -253,6 +282,7 @@ if __name__ == '__main__':
     #test2()
     #test3()
     #test4()
-    test5()
+    #test5()
+    test6()
     
     
