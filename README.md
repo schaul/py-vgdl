@@ -12,6 +12,8 @@ Installation and Dependencies
 *  Get the [pygame](http://www.pygame.org/download.shtml) package
 
 *  For all reinforcement learning usage, also get the [PyBrain](http://www.pybrain.org) machine learning library
+
+*  For the upload to youtube functionality, you will need the [gdata](https://pypi.python.org/pypi/gdata) library
  
 *  Download repository 
 
@@ -42,6 +44,11 @@ Features
  * Portal
  * Sokoban
  * PTSP
+ * Pong
+ * Tank wars
+ * Dig-dug
+ * Pacman
+ * ...
 * Human play
  * Interactive play, either from bird-eye viewpoint, or from first-person viewpoint
  * Create animated GIFs from replayed action sequences
