@@ -120,16 +120,28 @@ class Passive(VGDLSprite):
 class Flicker(VGDLSprite):
     """ A square that persists just a few timesteps. """
     color = RED    
-    def __init__(self, limit=1, **kwargs):
-        self.limit = limit
-        self.age = 0
+    limit = 1
+    def __init__(self, **kwargs):
+        self._age = 0
         VGDLSprite.__init__(self, **kwargs)    
         
     def update(self, game):
         VGDLSprite.update(self, game)
-        if self.age > self.limit:
+        if self._age > self.limit:
             killSprite(self, None, game)
-        self.age += 1
+        self._age += 1
+        
+class Spreader(Flicker):
+    """ Spreads to its four canonical neighbor positions, and replicates itself there, 
+    if these are unoccupied. """
+    spreadprob = 1.
+    def update(self, game):
+        Flicker.update(self, game)
+        if self._age == 2:
+            for u in BASEDIRS:
+                if random() < self.spreadprob:
+                    game._createSprite([self.name], (self.lastrect.left + u[0] * self.lastrect.size[0],
+                                                     self.lastrect.top + u[1] * self.lastrect.size[1]))
         
 class SpriteProducer(VGDLSprite):
     """ Superclass for all sprites that may produce other sprites, of type 'stype'. """ 
