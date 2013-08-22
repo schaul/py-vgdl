@@ -479,13 +479,27 @@ class NoisyRotatingFlippingAvatar(RotatingFlippingAvatar):
         
 class ShootAvatar(OrientedAvatar, SpriteProducer):
     """ Produces a sprite in front of it (e.g., Link using his sword). """
+    ammo=None
+    
     def __init__(self, stype=None, **kwargs):
         self.stype = stype
         OrientedSprite.__init__(self, **kwargs)
 
     def update(self, game):
         OrientedAvatar.update(self, game)
-        self._shoot(game)
+        if self._hasAmmo():
+            self._shoot(game)
+        
+    def _hasAmmo(self):
+        if self.ammo is None:
+            return True
+        elif self.ammo in self.resources:
+            return self.resources[self.ammo] > 0
+        return False        
+        
+    def _reduceAmmo(self):
+        if self.ammo is not None and self.ammo in self.resources:
+            self.resources[self.ammo] -= 1
         
     def _shoot(self, game):
         from pygame.locals import K_SPACE
@@ -495,6 +509,7 @@ class ShootAvatar(OrientedAvatar, SpriteProducer):
                                                        self.lastrect.top + u[1] * self.lastrect.size[1]))
             if len(newones) > 0  and isinstance(newones[0], OrientedSprite):
                 newones[0].orientation = unitVector(self.orientation)
+            self._reduceAmmo()    
 
         
 class AimedAvatar(ShootAvatar):
@@ -729,7 +744,7 @@ def collectResource(sprite, partner, game):
     """ Adds/increments the resource type of sprite in partner """
     assert isinstance(sprite, Resource)
     r = sprite.res_type
-    partner.resources[r] += sprite.res_value
+    partner.resources[r] = min(sprite.res_limit, partner.resources[r]+sprite.res_value)    
     partner.resources_limits[r] = sprite.res_limit
     partner.resources_colors[r] = sprite.res_color
     

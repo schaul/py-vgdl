@@ -23,10 +23,7 @@ BasicGame
     SpriteSet    
         flower > SpawnPoint stype=bee    prob=0.02 color=PINK
         hell   > SpawnPoint stype=zombie prob=0.05 color=RED
-        structure > Immovable            
-            goal  > color=GREEN
-            marsh > color=BROWN
-        honey  > Resource color=GOLD res_limit=10 # this limit is only used for visualizing progress
+        honey  > Resource color=GOLD res_limit=10 
         moving >
             avatar > MovingAvatar            
             bee    > RandomNPC speed=1   cooldown=3  color=YELLOW
