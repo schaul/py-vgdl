@@ -244,9 +244,8 @@ class BasicGame(object):
                         break
             if anyother:
                 continue
-            s = sclass(pos=pos, size=(self.block_size, self.block_size), **args)
+            s = sclass(pos=pos, size=(self.block_size, self.block_size), name=key, **args)
             s.stypes = stypes
-            s.name = key
             self.sprite_groups[key].append(s)
             self.num_sprites += 1
             if s.is_stochastic:
@@ -389,7 +388,7 @@ class BasicGame(object):
 
 class VGDLSprite(object):
     """ Base class for all sprite types. """
-    
+    name = None
     COLOR_DISC = [20,80,140,200]
     dirtyrects = []
     
@@ -403,7 +402,7 @@ class VGDLSprite(object):
     mass     = 1
     physicstype=None
     shrinkfactor=0
-    
+        
     def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None, **kwargs):
         self.rect = pygame.Rect(pos, size)
         self.lastrect = self.rect
@@ -428,6 +427,11 @@ class VGDLSprite(object):
                 print "WARNING: undefined parameter '%s' for sprite '%s'! "%(name, self.__class__.__name__)
         # how many timesteps ago was the last move?
         self.lastmove = 0        
+    
+        # management of resources contained in the sprite
+        self.resources = defaultdict(lambda: 0)
+        self.resources_limits = {}
+        self.resources_colors = {}
         
     def update(self, game):
         """ The main place where subclasses differ. """
@@ -474,7 +478,24 @@ class VGDLSprite(object):
             r = self.rect.copy()
         else:
             r = screen.fill(self.color, shrunk)
-        VGDLSprite.dirtyrects.append(r)
+        if len(self.resources) > 0:
+            self._drawResources(screen, shrunk)
+        VGDLSprite.dirtyrects.append(r) 
+        
+    def _drawResources(self, screen, rect):
+        """ Draw progress bars on the bottom third of the sprite """
+        from ontology import BLACK
+        tot = len(self.resources)
+        barheight = rect.height/3.5/tot
+        offset = rect.top+2*rect.height/3.
+        for r in sorted(self.resources.keys()):
+            wiggle = rect.width/10.
+            prop = max(0,min(1,self.resources[r] / float(self.resources_limits[r])))
+            filled = pygame.Rect(rect.left+wiggle/2, offset, prop*(rect.width-wiggle), barheight)
+            rest   = pygame.Rect(rect.left+wiggle/2+prop*(rect.width-wiggle), offset, (1-prop)*(rect.width-wiggle), barheight)
+            screen.fill(self.resources_colors[r], filled)
+            screen.fill(BLACK, rest)
+            offset += barheight            
         
     def _clear(self, screen, background, double=False):
         r = screen.blit(background, self.rect, self.rect)

@@ -22,6 +22,7 @@ BLACK = (0, 0, 0)
 ORANGE = (250, 160, 0)
 YELLOW = (250, 250, 0)
 PINK = (250, 200, 200)
+GOLD = (250, 212, 0)
 LIGHTRED = (250, 50, 50)
 LIGHTORANGE = (250, 200, 100)
 LIGHTBLUE = (50, 100, 250)
@@ -117,6 +118,20 @@ class Passive(VGDLSprite):
     """ A square that may budge. """
     color = RED    
     
+class Resource(Immovable):
+    """ Can be collected, and in that case adds/increases a progress bar on the collector """
+    res_type = None
+    res_color= None
+    res_value=1
+    res_limit=2
+    
+    def __init__(self, **kwargs):
+        VGDLSprite.__init__(self, **kwargs)
+        if self.res_type is None:
+            self.res_type = self.name
+        if self.res_color is None:
+            self.res_color = self.color
+            
 class Flicker(VGDLSprite):
     """ A square that persists just a few timesteps. """
     color = RED    
@@ -708,7 +723,25 @@ def killIfSlow(sprite, partner, game, limitspeed=1):
                              sprite._velocity()[1] - partner._velocity()[1]))
     if relspeed < limitspeed:
         killSprite(sprite, partner, game)
+        
+def collectResource(sprite, partner, game):
+    """ Adds/increments the resource type of sprite in partner """
+    assert isinstance(sprite, Resource)
+    r = sprite.res_type
+    partner.resources[r] += sprite.res_value
+    partner.resources_limits[r] = sprite.res_limit
+    partner.resources_colors[r] = sprite.res_color
 
+def killIfHasMore(sprite, partner, game, resource, limit=1):
+    """ If 'sprite' has more than a limit of the resource type given, it dies. """
+    if sprite.resources[resource] >= limit:
+        killSprite(sprite, partner, game)
+    
+def killIfOtherHasMore(sprite, partner, game, resource, limit=1):
+    """ If 'partner' has more than a limit of the resource type given, sprite dies. """
+    if partner.resources[resource] >= limit:
+        killSprite(sprite, partner, game)
+    
 def drownSprite(sprite, partner, game):
     if not sprite.drowning_safe:
         killSprite(sprite, partner, game)
