@@ -562,12 +562,13 @@ class MarioAvatar(InertialAvatar):
 from core import Termination
         
 class Timeout(Termination):
-    def __init__(self, limit=0):
+    def __init__(self, limit=0, win=False):
         self.limit = limit
+        self.win = win
     
     def isDone(self, game):
         if game.time >= self.limit:
-            return True, False
+            return True, self.win
         else:
             return False, None
     
@@ -731,6 +732,9 @@ def collectResource(sprite, partner, game):
     partner.resources[r] += sprite.res_value
     partner.resources_limits[r] = sprite.res_limit
     partner.resources_colors[r] = sprite.res_color
+    
+def changeResource(sprite, partner, game, resource, value=1):
+    sprite.resources[resource] += value    
 
 def killIfHasMore(sprite, partner, game, resource, limit=1):
     """ If 'sprite' has more than a limit of the resource type given, it dies. """
@@ -740,6 +744,16 @@ def killIfHasMore(sprite, partner, game, resource, limit=1):
 def killIfOtherHasMore(sprite, partner, game, resource, limit=1):
     """ If 'partner' has more than a limit of the resource type given, sprite dies. """
     if partner.resources[resource] >= limit:
+        killSprite(sprite, partner, game)
+        
+def killIfHasLess(sprite, partner, game, resource, limit=1):
+    """ If 'sprite' has more than a limit of the resource type given, it dies. """
+    if sprite.resources[resource] <= limit:
+        killSprite(sprite, partner, game)
+    
+def killIfOtherHasLess(sprite, partner, game, resource, limit=1):
+    """ If 'partner' has more than a limit of the resource type given, sprite dies. """
+    if partner.resources[resource] <= limit:
         killSprite(sprite, partner, game)
     
 def drownSprite(sprite, partner, game):

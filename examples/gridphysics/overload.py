@@ -4,7 +4,7 @@ VGDL example: pick up as many gold bricks as possible, but not too many, or you'
 @author: Tom Schaul
 '''
 
-portal_level = """
+overload_level = """
 wwwwwwwwwwwwwwwwwww
 wA  .  0     ..  Gw
 w0  .  -     ..  0w
@@ -18,7 +18,7 @@ w000w        0  www
 wwwwwwwwwwwwwwwwwww
 """
 
-portal_game = """
+overload_game = """
 BasicGame
     SpriteSet    
         structure > Immovable            
@@ -48,4 +48,4 @@ BasicGame
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(portal_game, portal_level)    
+    VGDLParser.playGame(overload_game, overload_level)    
