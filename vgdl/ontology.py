@@ -368,15 +368,7 @@ class MovingAvatar(VGDLSprite, Avatar):
         action = self._readAction(game)
         if action:
             self.physics.activeMovement(self, action)
-        
-class Frog(MovingAvatar):
-    """ Has an additional flag that keeps if from drowning if true. """
-    drowning_safe = False    
-    def update(self, game):
-        MovingAvatar.update(self, game)
-        self.drowning_safe = False
-        
-        
+                
 class HorizontalAvatar(MovingAvatar):
     """ Only horizontal moves.  """
     def update(self, game):
@@ -759,7 +751,12 @@ def collectResource(sprite, partner, game):
     partner.resources_colors[r] = sprite.res_color
     
 def changeResource(sprite, partner, game, resource, value=1):
-    sprite.resources[resource] += value    
+    if resource not in sprite.resources_limits:
+        # TODO: not very satisfying default behavior...
+        sprite.resources_limits[resource] = abs(value)
+        sprite.resources_colors[resource] = partner.color
+    sprite.resources[resource] = min(sprite.resources[resource]+value, sprite.resources_limits[resource])    
+    
 
 def killIfHasMore(sprite, partner, game, resource, limit=1):
     """ If 'sprite' has more than a limit of the resource type given, it dies. """
@@ -772,21 +769,14 @@ def killIfOtherHasMore(sprite, partner, game, resource, limit=1):
         killSprite(sprite, partner, game)
         
 def killIfHasLess(sprite, partner, game, resource, limit=1):
-    """ If 'sprite' has more than a limit of the resource type given, it dies. """
+    """ If 'sprite' has less than a limit of the resource type given, it dies. """
     if sprite.resources[resource] <= limit:
         killSprite(sprite, partner, game)
     
 def killIfOtherHasLess(sprite, partner, game, resource, limit=1):
-    """ If 'partner' has more than a limit of the resource type given, sprite dies. """
+    """ If 'partner' has less than a limit of the resource type given, sprite dies. """
     if partner.resources[resource] <= limit:
         killSprite(sprite, partner, game)
-    
-def drownSprite(sprite, partner, game):
-    if not sprite.drowning_safe:
-        killSprite(sprite, partner, game)
-    
-def drownSafe(sprite, partner, game):
-    sprite.drowning_safe = True
     
 def wrapAround(sprite, partner, game, offset=0):
     """ Move to the edge of the screen in the direction the sprite is coming from. 
@@ -822,5 +812,5 @@ def teleportToExit(sprite, partner, game):
 stochastic_effects = [teleportToExit, windGust, slipForward, attractGaze, flipDirection]
 
 # this allows is to determine which effects might kill a sprite
-kill_effects = [killSprite, drownSprite, killIfSlow, transformTo, killIfOtherHasLess, killIfOtherHasMore, killIfHasMore, killIfHasLess,
+kill_effects = [killSprite, killIfSlow, transformTo, killIfOtherHasLess, killIfOtherHasMore, killIfHasMore, killIfHasLess,
                 killIfFromAbove, killIfAlive]
