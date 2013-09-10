@@ -32,16 +32,16 @@ BasicGame
         truck  > Missile    orientation=RIGHT 
             fasttruck  > speed=0.2  color=ORANGE
             slowtruck  > speed=0.1  color=RED
-        avatar > Frog
         # defining 'wall' last, makes the walls show on top of all other sprites
         wall > Immovable color=BLACK               
         
     InteractionSet
         goal avatar  > killSprite
-        avatar log   > drownSafe
+        avatar log   > changeResource resource=log value=2
         avatar log   > pullWithIt   # note how one collision can have multiple effects
         avatar wall  > stepBack
-        avatar water > drownSprite
+        avatar water > killIfHasLess resource=log limit=0
+        avatar water > changeResource resource=log value=-1
         avatar truck > killSprite
         log    EOS   > killSprite
         truck  EOS   > wrapAround
