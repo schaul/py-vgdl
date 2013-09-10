@@ -175,6 +175,7 @@ class BasicGame(object):
         self.char_mapping = {}
         # termination criteria
         self.terminations = [Termination()]
+        self.score = 0
         self.num_sprites = 0
         self.kill_list=[]        
         self.is_stochastic = False
@@ -326,17 +327,22 @@ class BasicGame(object):
                     self.lastcollisions[(key1, 'EOS')].append((s1, None))
                     
     def _eventHandling(self):
-        for g1, g2, effect, args in self.collision_eff:
+        for g1, g2, effect, kwargs in self.collision_eff:
             for s1, s2 in set(self.lastcollisions[(g1, g2)]):
                 # TODO: this is not a bullet-proof way, but seems to work
                 if s1 not in self.kill_list:
-                    effect(s1, s2, self, **args)
+                    if 'scoreChange' in kwargs:
+                        self.score += kwargs['scoreChange']
+                        kwargs = kwargs.copy()
+                        del kwargs['scoreChange']
+                    effect(s1, s2, self, **kwargs)
                                             
     def startGame(self, headless, persist_movie):        
         self._initScreen(self.screensize,headless)
         clock = pygame.time.Clock()
         self.time = 0
         self.kill_list=[]
+        self.score = 0
         pygame.display.flip()
         ended = False
         win = False
@@ -380,10 +386,16 @@ class BasicGame(object):
         
             
         if win:
-            print "Dude, you're a born winner!"
+            # winning a game always gives a positive score.
+            if self.score <= 0: 
+                self.score = 1
+            print "Game won, with score %s" % self.score
         else:
-            print "Dang. Try again..."            
+            print "Game lost. Score=%s" % self.score
+                
+        # pause a few frames for the player to see the final screen.    
         pygame.time.wait(50)    
+        return win, self.score
     
 
 class VGDLSprite(object):

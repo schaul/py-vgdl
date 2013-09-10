@@ -20,7 +20,7 @@ BasicGame
         SpriteCounter stype=avatar    win=False     
            
     InteractionSet
-        evil avatar > killIfFromAbove
+        evil avatar > killIfFromAbove scoreChange=1
         avatar evil > killIfAlive
         moving EOS  > killSprite 
         goal avatar > killSprite
