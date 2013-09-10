@@ -23,16 +23,21 @@ BasicGame
     SpriteSet    
         goal   > Immovable color=GREEN
         mana   > Resource color=LIGHTBLUE res_limit=3
-        fire   > Missile color=RED singleton=True
-        avatar > ShootAvatar ammo=mana stype=fire
+        bullet > Missile color=RED singleton=True
+        fire   > Spreader color=ORANGE spreadprob=0.25
+        avatar > ShootAvatar ammo=mana stype=bullet
             
     InteractionSet
-        mana avatar  > collectResource
+        mana avatar  > collectResource scoreChange=5
         mana avatar  > killSprite
         avatar wall  > stepBack
-        goal avatar  > killSprite
-        wall fire    > killSprite
-        fire wall    > killSprite
+        goal avatar  > killSprite scoreChange=100
+        avatar fire  > killSprite
+        wall bullet  > killSprite scoreChange=1
+        bullet wall  > transformTo stype=fire
+        fire   wall  > killSprite
+        fire   fire  > killSprite
+        mana   fire  > killSprite
         
     TerminationSet
         SpriteCounter stype=avatar limit=0 win=False
