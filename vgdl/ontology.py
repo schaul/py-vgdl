@@ -634,7 +634,6 @@ def transformTo(sprite, partner, game, stype='wall'):
 def stepBack(sprite, partner, game):
     """ Revert last move. """
     sprite.rect = sprite.lastrect   
-        
     
 def undoAll(sprite, partner, game):
     """ Revert last moves of all sprites. """
@@ -740,6 +739,17 @@ def killIfSlow(sprite, partner, game, limitspeed=1):
     if relspeed < limitspeed:
         killSprite(sprite, partner, game)
         
+def killIfFromAbove(sprite, partner, game):
+    """ Kills the sprite, only if the other one is higher and moving down. """
+    if (sprite.lastrect.top > partner.lastrect.top 
+        and partner.rect.top > partner.lastrect.top):
+        killSprite(sprite, partner, game)
+        
+def killIfAlive(sprite, partner, game):
+    """ Perform the killing action, only if no previous collision effect has removed the partner. """
+    if partner not in game.kill_list:
+        killSprite(sprite, partner, game)
+        
 def collectResource(sprite, partner, game):
     """ Adds/increments the resource type of sprite in partner """
     assert isinstance(sprite, Resource)
@@ -812,4 +822,5 @@ def teleportToExit(sprite, partner, game):
 stochastic_effects = [teleportToExit, windGust, slipForward, attractGaze, flipDirection]
 
 # this allows is to determine which effects might kill a sprite
-kill_effects = [killSprite, drownSprite, killIfSlow, transformTo]
+kill_effects = [killSprite, drownSprite, killIfSlow, transformTo, killIfOtherHasLess, killIfOtherHasMore, killIfHasMore, killIfHasLess,
+                killIfFromAbove, killIfAlive]
