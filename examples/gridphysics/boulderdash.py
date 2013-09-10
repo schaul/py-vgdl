@@ -25,14 +25,14 @@ BasicGame
 	SpriteSet
 		avatar > MovingAvatar color=WHITE 
 		dirt > Immovable color=BROWN
-		exit > Immovable color=GREEN
+		exitdoor > Immovable color=GREEN
 		diamond > Resource color=YELLOW res_limit=10
 		boulder > Missile orientation=DOWN color=GRAY speed=0.2
 		crab > RandomNPC
 		butterfly > RandomNPC
 	LevelMapping
 		. > dirt
-		E > exit
+		E > exitdoor
 		o > boulder
 		x > diamond
 		c > crab
@@ -61,9 +61,11 @@ BasicGame
 		butterfly diamond > stepBack
 		crab butterfly > killSprite
 		butterfly crab > transformTo stype=diamond
-		avatar exit > killIfHasMore resource=diamond limit=9
+		exitdoor avatar > killIfOtherHasMore resource=diamond limit=9
 	TerminationSet
-		SpriteCounter stype=exit limit=0 win=True
+		SpriteCounter stype=avatar limit=0 win=False
+		SpriteCounter stype=exitdoor limit=0 win=True
+		
 """
 
 if __name__ == "__main__":
