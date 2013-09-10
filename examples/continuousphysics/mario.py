@@ -20,9 +20,10 @@ BasicGame
         SpriteCounter stype=avatar    win=False     
            
     InteractionSet
+        evil avatar > killIfFromAbove
+        avatar evil > killIfAlive
         moving EOS  > killSprite 
         goal avatar > killSprite
-        avatar evil > killSprite
         moving wall > wallStop friction=0.1
         moving elevator > pullWithIt        
         elevator EOS    > wrapAround
