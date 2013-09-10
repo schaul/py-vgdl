@@ -489,6 +489,8 @@ class VGDLSprite(object):
         barheight = rect.height/3.5/tot
         offset = rect.top+2*rect.height/3.
         for r in sorted(self.resources.keys()):
+            if not r in self.resources_limits:
+                continue
             wiggle = rect.width/10.
             prop = max(0,min(1,self.resources[r] / float(self.resources_limits[r])))
             filled = pygame.Rect(rect.left+wiggle/2, offset, prop*(rect.width-wiggle), barheight)
