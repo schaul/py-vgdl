@@ -1,7 +1,7 @@
 '''
 VGDL example: Boulder Dash.
 
-@author: Julian Togelius
+@author: Julian Togelius and Tom Schaul
 '''
 
 boulderdash_level = """
@@ -23,14 +23,16 @@ wwwwwwwwwwwwwwwwwwwwwwwwww
 boulderdash_game = """
 BasicGame
 	SpriteSet
+		sword > Flicker color=LIGHTGRAY limit=1 singleton=True
 		dirt > Immovable color=BROWN
 		exitdoor > Immovable color=GREEN
 		diamond > Resource color=YELLOW res_limit=10
 		boulder > Missile orientation=DOWN color=GRAY speed=0.2
 		moving > 
-			avatar > MovingAvatar color=WHITE 
-			crab > RandomNPC
-			butterfly > RandomNPC
+			avatar  > ShootAvatar   stype=sword 
+			enemy > RandomNPC
+				crab > color=RED
+				butterfly > color=PINK
 	LevelMapping
 		. > dirt
 		E > exitdoor
@@ -40,21 +42,20 @@ BasicGame
 		b > butterfly
 	InteractionSet
 		dirt avatar > killSprite
+		dirt sword  > killSprite
 		diamond avatar > collectResource scoreChange=5
 		diamond avatar > killSprite
 		moving wall > stepBack
 		moving boulder > stepBack
 		avatar boulder > killIfFromAbove
-		boulder boulder > stepBack
+		boulder boulder > wallStop
 		avatar butterfly > killSprite
 		avatar crab > killSprite
 		boulder dirt > stepBack
 		boulder wall > stepBack
 		boulder diamond > stepBack
-		crab dirt > stepBack
-		crab diamond > stepBack
-		butterfly dirt > stepBack
-		butterfly diamond > stepBack
+		enemy dirt > stepBack
+		enemy diamond > stepBack
 		crab butterfly > killSprite
 		butterfly crab > transformTo stype=diamond scoreChange=1
 		exitdoor avatar > killIfOtherHasMore resource=diamond limit=9 scoreChange=100
