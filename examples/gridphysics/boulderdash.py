@@ -26,7 +26,7 @@ BasicGame
 		sword > Flicker color=LIGHTGRAY limit=1 singleton=True
 		dirt > Immovable color=BROWN
 		exitdoor > Immovable color=GREEN
-		diamond > Resource color=YELLOW res_limit=10
+		diamond > Resource color=YELLOW res_limit=10 shrinkfactor=0.25
 		boulder > Missile orientation=DOWN color=GRAY speed=0.2
 		moving > 
 			avatar  > ShootAvatar   stype=sword 

@@ -1,12 +1,8 @@
 Game dynamics:
-- resource-type objects (health, heat, ...)
-- direction-based shooting
 - momentum-preserving splits
-- multi-player (mixed human/non-human controllers)
 
 Example games:
 - asteroids
-- pong
 
 Interfaces
 - longer-range subjective vision
@@ -14,5 +10,4 @@ Interfaces
 
 Other:
 - nicer graphics, possibly based on palettes
-- full score system, intermediate rewards
 - visualize continuous trajectories

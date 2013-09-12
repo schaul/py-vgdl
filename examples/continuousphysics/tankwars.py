@@ -12,7 +12,7 @@ BasicGame
         tank > AimedFlakAvatar  orientation=UP
             avatar > alternate_keys=True stype=mybullet 
             otheravatar > color=RED stype=otherbullet
-        bullet > Missile physicstype=GravityPhysics speed=15
+        bullet > Missile physicstype=GravityPhysics speed=20 draw_arrow=True
             mybullet > singleton=True color=WHITE
             otherbullet > singleton=True color=RED
         lift  > Conveyor 
@@ -28,6 +28,7 @@ BasicGame
         avatar otherbullet > killSprite 
         bullet wall > killSprite 
         wall bullet > killSprite
+        bullet EOS > killSprite
         tank wall > stepBack
         tank EOS > stepBack
         tank lift  > conveySprite
@@ -39,15 +40,18 @@ BasicGame
 """
 
 tankwars_level = """
-w                w       w
-w   w       w            w
-w                     w  w
-w                        w
-w                        w
-w     -   w   -          w
-w    - +wwwww+       -   w
-wA    +wwwwwwwwwwwww+   aw
-wwwwwwwwwwwwwwwwwwwwwwwwww
+w                w           w
+w   w       w                w
+w                     w      w
+w               w            w
+w                            w
+w                            w
+w       w                    w
+w                   w        w
+w          www               w
+w         wwwwww             w
+w       wwwwwwww             w
+wA     wwwwwwwwwwwww        aw
 """
 
 if __name__ == "__main__":

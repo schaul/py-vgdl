@@ -19,7 +19,7 @@ wwwwwwwwwwwwwwwwwww
 """
 
 caster_game = """
-BasicGame
+BasicGame 
     SpriteSet    
         goal   > Immovable color=GREEN
         mana   > Resource color=LIGHTBLUE res_limit=3
