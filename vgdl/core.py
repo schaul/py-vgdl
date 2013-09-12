@@ -148,6 +148,7 @@ class BasicGame(object):
     
     block_size = 10
     frame_rate = 20
+    load_save_enabled = True
     
     def __init__(self, **kwargs):
         from ontology import Immovable, DARKGRAY, MovingAvatar
@@ -175,10 +176,16 @@ class BasicGame(object):
         self.char_mapping = {}
         # termination criteria
         self.terminations = [Termination()]
+        self.is_stochastic = False
+        self._lastsaved = None
+        self.reset()
+        
+    def reset(self):
         self.score = 0
+        self.time = 0
+        self.ended = False
         self.num_sprites = 0
         self.kill_list=[]        
-        self.is_stochastic = False
     
     def buildLevel(self, lstr):        
         from ontology import stochastic_effects
@@ -293,7 +300,78 @@ class BasicGame(object):
     def getAvatars(self):
         """ The currently alive avatar(s) """
         return [s for s in self if isinstance(s, Avatar) and s not in self.kill_list]
+    
+    def getFullState(self):
+        """ Return a dictionary that allows full reconstruction of the game state,
+        e.g. for the load/save functionality. """
+        # TODO: make sure this list is complete/correct -- maybe a naming convention would be easier,
+        # if it distinguished in-game-mutable form immutable attributes!
+        ignoredattributes = ['resources_colors',
+                             'stypes',
+                             'name',
+                             'lastmove',
+                             'color',
+                             'resources_limits',
+                             'lastrect',
+                             'resources', 
+                             'physicstype', 
+                             'physics',
+                             'rect',
+                             'alternate_keys',
+                             'res_type',
+                             'res_limit',
+                             'res_color',
+                             'stype',
+                             'ammo',
+                             'draw_arrow',
+                             'shrink_factor',
+                             'prob',
+                             'is_stochastic',
+                             'cooldown',
+                             'total',
+                             'is_static',
+                             'noiseLevel',
+                             'angle_diff',
+                             'only_active',
+                             'airsteering',
+                             'strength',
+                             ]
+        obs = {}
+        for key in self.sprite_groups:
+            ss = {}
+            obs[key] = ss
+            for s in self.getSprites(key):
+                pos = (s.rect.left, s.rect.top)
+                attrs = {}
+                while pos in ss:
+                    # two objects of the same type in the same location, we need to disambiguate
+                    pos = (pos, None)
+                ss[pos] = attrs
+                for a, val in s.__dict__.items():
+                    if a not in ignoredattributes:
+                        attrs[a] = val
+                if len(s.resources) > 0:
+                    attrs['resources'] = dict(s.resources)
+                    
         
+        fs = {'score': self.score,
+              'ended': self.ended,
+              'objects': obs}
+        return fs
+        
+    def setFullState(self, fs):
+        """ Reset the game to be exactly as defined in the fullstate dict. """
+        self.reset()
+        self.score = fs['score']
+        self.ended = fs['ended']
+        for key, ss in fs['objects'].items():
+            self.sprite_groups[key] = []
+            for pos, attrs in ss.items():
+                s = self._createSprite([key], pos)[0]
+                for a, val in attrs.items():
+                    assert a != 'resources', 'Resource load/save not yet supported...'
+                    s.__setattr__(a, val)  
+            
     def _clearAll(self, onscreen=True):
         for s in set(self.kill_list):
             if onscreen:
@@ -339,26 +417,35 @@ class BasicGame(object):
                                             
     def startGame(self, headless, persist_movie):        
         self._initScreen(self.screensize,headless)
-        clock = pygame.time.Clock()
-        self.time = 0
-        self.kill_list=[]
-        self.score = 0
         pygame.display.flip()
-        ended = False
-        win = False
+        self.reset()
+        clock = pygame.time.Clock()
         
+        win = False
         i = 0
-        while not ended:
+        while not self.ended:
             clock.tick(self.frame_rate) 
             self.time += 1
             self._clearAll()            
+            
             # gather events
             pygame.event.pump()
-            self.keystate = pygame.key.get_pressed()            
+            self.keystate = pygame.key.get_pressed()
+            
+            # load/save handling
+            if self.load_save_enabled:
+                from pygame.locals import K_1, K_2        
+                if self.keystate[K_2] and self._lastsaved is not None:
+                    self.setFullState(self._lastsaved)
+                    self._initScreen(self.screensize,headless)
+                    pygame.display.flip()
+                if self.keystate[K_1]:
+                    self._lastsaved = self.getFullState()    
+                    
             # termination criteria
             for t in self.terminations:
-                ended, win = t.isDone(self)
-                if ended:
+                self.ended, win = t.isDone(self)
+                if self.ended:
                     break            
             # update sprites 
             for s in self:
