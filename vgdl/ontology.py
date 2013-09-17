@@ -333,6 +333,7 @@ class Fleeing(Chaser):
 #     Avatars: player-controlled sprite types
 # ---------------------------------------------------------------------
 from core import Avatar
+from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN,K_SPACE
 
 class MovingAvatar(VGDLSprite, Avatar):
     """ Default avatar, moves in the 4 cardinal directions. """
@@ -340,6 +341,16 @@ class MovingAvatar(VGDLSprite, Avatar):
     speed = 1    
     is_avatar = True
     alternate_keys=False
+    
+    
+    def declare_possible_actions(self):
+        actions = {}
+        actions["UP"] = K_UP
+        actions["DOWN"] = K_DOWN
+        actions["LEFT"] = K_LEFT
+        actions["RIGHT"] = K_RIGHT
+        return actions
+    
     def _readAction(self, game):        
         actions = self._readMultiActions(game)
         if actions:
@@ -370,6 +381,14 @@ class MovingAvatar(VGDLSprite, Avatar):
             self.physics.activeMovement(self, action)
                 
 class HorizontalAvatar(MovingAvatar):
+
+    def declare_possible_actions(self):
+        actions = {}
+        actions["LEFT"] = K_LEFT
+        actions["RIGHT"] = K_RIGHT    
+        return actions
+    
+    
     """ Only horizontal moves.  """
     def update(self, game):
         VGDLSprite.update(self, game)        
@@ -378,6 +397,13 @@ class HorizontalAvatar(MovingAvatar):
             self.physics.activeMovement(self, action)
 
 class VerticalAvatar(MovingAvatar):
+    
+    def declare_possible_actions(self):
+        actions = {}
+        actions["UP"] = K_UP
+        actions["DOWN"] = K_DOWN
+        return actions
+    
     """ Only vertical moves.  """
     def update(self, game):
         VGDLSprite.update(self, game)        
@@ -386,6 +412,12 @@ class VerticalAvatar(MovingAvatar):
             self.physics.activeMovement(self, action)
         
 class FlakAvatar(HorizontalAvatar, SpriteProducer):
+    
+    def declare_possible_actions(self):
+        actions = self.declare_possible_actions()
+        actions["SPACE"] = K_SPACE
+        return actions
+    
     """ Hitting the space button creates a sprite of the 
     specified type at its location. """
     color = GREEN            

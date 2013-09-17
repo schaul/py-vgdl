@@ -20,12 +20,17 @@ class VGDLParser(object):
     verbose = False
     
     @staticmethod     
-    def playGame(game_str, map_str, headless = False, persist_movie = False):
+    def playGame(game_str, map_str, headless = False, persist_movie = False, movie_dir = "./tmpl"):
         """ Parses the game and level map strings, and starts the game. """
         g = VGDLParser().parseGame(game_str)
         g.buildLevel(map_str)
         g.uiud = uuid.uuid4()
-        g.startGame(headless, persist_movie )
+        if(headless):
+            g.startGameExternalPlayer(headless, persist_movie, movie_dir )
+            #g.startGame(headless,persist_movie)
+        else:
+            g.startGame(headless,persist_movie)
+            
         return g
         
         
@@ -266,6 +271,7 @@ class BasicGame(object):
             os.environ["SDL_VIDEODRIVER"] = "dummy"
             pygame.display.init()
             self.screen = pygame.display.set_mode((1,1))
+            self.background = pygame.Surface(size)
         else:
             from ontology import LIGHTGRAY
             pygame.init()    
@@ -346,7 +352,7 @@ class BasicGame(object):
                 while pos in ss:
                     # two objects of the same type in the same location, we need to disambiguate
                     pos = (pos, None)
-                ss[pos] = attrs
+                ss[str(pos)] = attrs
                 for a, val in s.__dict__.items():
                     if a not in ignoredattributes:
                         attrs[a] = val
@@ -483,6 +489,71 @@ class BasicGame(object):
         # pause a few frames for the player to see the final screen.    
         pygame.time.wait(50)    
         return win, self.score
+        
+        
+
+    def getPossibleActions(self):
+        return self.getAvatars()[0].declare_possible_actions()
+        
+    def startGameExternalPlayer(self, headless, persist_movie, movie_dir):        
+        self._initScreen(self.screensize,headless)
+        pygame.display.flip()
+        self.reset()
+        self.clock = pygame.time.Clock()
+        self.tmp_dir = movie_dir
+        self.video_tmpl = '{tmp_dir}%09d-{name}-{g_id}.png'.format(self.time,tmp_dir = self.tmp_dir, name="VGDL-GAME", g_id=self.uiud)
+                
+        
+    def tick(self,action,headless, persist_movie):
+        
+        win = False
+        
+        self.clock.tick(self.frame_rate) 
+        self.time += 1
+        self._clearAll()            
+            
+            # gather events
+        pygame.event.pump()
+        self.keystate = list(pygame.key.get_pressed())
+        
+        self.keystate[action] = 1
+            
+            # load/save handling
+        if self.load_save_enabled:
+                from pygame.locals import K_1, K_2        
+                if self.keystate[K_2] and self._lastsaved is not None:
+                    self.setFullState(self._lastsaved)
+                    self._initScreen(self.screensize,headless)
+                    pygame.display.flip()
+                if self.keystate[K_1]:
+                    self._lastsaved = self.getFullState()    
+                    
+            # termination criteria
+        for t in self.terminations:
+                self.ended, win = t.isDone(self)
+                if self.ended:
+                    return win, self.score      
+            # update sprites 
+        #print action
+        
+        for s in self:
+                s.update(self)                
+            # handle collision effects
+        self._updateCollisionDict()
+        self._eventHandling()
+        self._drawAll()                            
+        pygame.display.update(VGDLSprite.dirtyrects)
+            
+            #if(headless):
+             
+        VGDLSprite.dirtyrects = []
+        
+        return None, None
+            
+       
+                
+        
+        
     
 
 class VGDLSprite(object):
@@ -612,6 +683,9 @@ class VGDLSprite(object):
 class Avatar(object):
     """ Abstract superclass of all avatars. """
     shrinkfactor=0.15
+    
+    def __init__(self):
+        self.actions = self.declare_possible_actions()
    
 class Termination(object):
     """ Base class for all termination criteria. """
