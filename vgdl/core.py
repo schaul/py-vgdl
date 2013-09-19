@@ -337,8 +337,6 @@ class BasicGame(object):
                              'rect',
                              'alternate_keys',
                              'res_type',
-                             'res_limit',
-                             'res_color',
                              'stype',
                              'ammo',
                              'draw_arrow',
@@ -364,7 +362,7 @@ class BasicGame(object):
                 while pos in ss:
                     # two objects of the same type in the same location, we need to disambiguate
                     pos = (pos, None)
-                ss[str(pos)] = attrs
+                ss[pos] = attrs
                 for a, val in s.__dict__.items():
                     if a not in ignoredattributes:
                         attrs[a] = val
@@ -387,8 +385,11 @@ class BasicGame(object):
             for pos, attrs in ss.items():
                 s = self._createSprite([key], pos)[0]
                 for a, val in attrs.items():
-                    assert a != 'resources', 'Resource load/save not yet supported...'
-                    s.__setattr__(a, val)  
+                    if a == 'resources':
+                        for r, v in val.items():
+                            s.resources[r] = v  
+                    else:
+                        s.__setattr__(a, val)  
             
     def _clearAll(self, onscreen=True):
         for s in set(self.kill_list):
