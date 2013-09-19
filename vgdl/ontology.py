@@ -333,7 +333,6 @@ class Fleeing(Chaser):
 #     Avatars: player-controlled sprite types
 # ---------------------------------------------------------------------
 from core import Avatar
-from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN,K_SPACE
 
 class MovingAvatar(VGDLSprite, Avatar):
     """ Default avatar, moves in the 4 cardinal directions. """
@@ -344,6 +343,7 @@ class MovingAvatar(VGDLSprite, Avatar):
     
     
     def declare_possible_actions(self):
+        from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN
         actions = {}
         actions["UP"] = K_UP
         actions["DOWN"] = K_DOWN
@@ -381,15 +381,16 @@ class MovingAvatar(VGDLSprite, Avatar):
             self.physics.activeMovement(self, action)
                 
 class HorizontalAvatar(MovingAvatar):
-
+    """ Only horizontal moves.  """
+    
     def declare_possible_actions(self):
+        from pygame.locals import K_LEFT, K_RIGHT
         actions = {}
         actions["LEFT"] = K_LEFT
         actions["RIGHT"] = K_RIGHT    
         return actions
     
     
-    """ Only horizontal moves.  """
     def update(self, game):
         VGDLSprite.update(self, game)        
         action = self._readAction(game)
@@ -397,14 +398,15 @@ class HorizontalAvatar(MovingAvatar):
             self.physics.activeMovement(self, action)
 
 class VerticalAvatar(MovingAvatar):
+    """ Only vertical moves.  """
     
     def declare_possible_actions(self):
+        from pygame.locals import K_UP, K_DOWN
         actions = {}
         actions["UP"] = K_UP
         actions["DOWN"] = K_DOWN
         return actions
     
-    """ Only vertical moves.  """
     def update(self, game):
         VGDLSprite.update(self, game)        
         action = self._readAction(game)
@@ -412,14 +414,15 @@ class VerticalAvatar(MovingAvatar):
             self.physics.activeMovement(self, action)
         
 class FlakAvatar(HorizontalAvatar, SpriteProducer):
+    """ Hitting the space button creates a sprite of the 
+    specified type at its location. """
     
     def declare_possible_actions(self):
-        actions = self.declare_possible_actions()
+        from pygame.locals import K_SPACE
+        actions = HorizontalAvatar.declare_possible_actions(self)
         actions["SPACE"] = K_SPACE
         return actions
     
-    """ Hitting the space button creates a sprite of the 
-    specified type at its location. """
     color = GREEN            
     def update(self, game):
         HorizontalAvatar.update(self, game)
