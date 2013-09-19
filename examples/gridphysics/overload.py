@@ -24,7 +24,7 @@ BasicGame
         structure > Immovable            
             goal  > color=GREEN
             marsh > color=BROWN
-        gold  > Resource color=GOLD res_limit=10 # this limit is only used for visualizing progress
+        gold  > Resource color=GOLD limit=11 # this limit is only used for visualizing progress
         moving >
             avatar > MovingAvatar            
             random > RandomNPC speed=1 cooldown=8

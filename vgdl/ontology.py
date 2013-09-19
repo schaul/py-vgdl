@@ -107,7 +107,7 @@ class GravityPhysics(ContinuousPhysics):
 # ---------------------------------------------------------------------
 #     Sprite types
 # ---------------------------------------------------------------------
-from core import VGDLSprite
+from core import VGDLSprite, Resource
 
 class Immovable(VGDLSprite):
     """ A gray square that does not budge. """
@@ -118,19 +118,10 @@ class Passive(VGDLSprite):
     """ A square that may budge. """
     color = RED    
     
-class Resource(Immovable):
-    """ Can be collected, and in that case adds/increases a progress bar on the collector """
-    res_type = None
-    res_color= None
-    res_value=1
-    res_limit=2
-    
-    def __init__(self, **kwargs):
-        VGDLSprite.__init__(self, **kwargs)
-        if self.res_type is None:
-            self.res_type = self.name
-        if self.res_color is None:
-            self.res_color = self.color
+class ResourcePack(Resource):
+    """ Can be collected, and in that case adds/increases a progress bar on the collecting sprite. 
+    Multiple resource packs can refer to the same type of base resource. """
+    is_static = True
             
 class Flicker(VGDLSprite):
     """ A square that persists just a few timesteps. """
@@ -205,12 +196,12 @@ class OrientedSprite(VGDLSprite):
     draw_arrow = False
     orientation = RIGHT    
     
-    def _draw(self, screen):
+    def _draw(self, game):
         """ With a triangle that shows the orientation. """
-        VGDLSprite._draw(self, screen)
+        VGDLSprite._draw(self, game)
         if self.draw_arrow:
             col = (self.color[0], 255 - self.color[1], self.color[2])
-            pygame.draw.polygon(screen, col, triPoints(self.rect, unitVector(self.orientation)))
+            pygame.draw.polygon(game.screen, col, triPoints(self.rect, unitVector(self.orientation)))
 
 class Conveyor(OrientedSprite):
     """ A static object that used jointly with the 'conveySprite' interaction to move 
@@ -780,18 +771,12 @@ def killIfAlive(sprite, partner, game):
 def collectResource(sprite, partner, game):
     """ Adds/increments the resource type of sprite in partner """
     assert isinstance(sprite, Resource)
-    r = sprite.res_type
-    partner.resources[r] = min(sprite.res_limit, partner.resources[r]+sprite.res_value)    
-    partner.resources_limits[r] = sprite.res_limit
-    partner.resources_colors[r] = sprite.res_color
+    r = sprite.resourceType
+    partner.resources[r] = min(partner.resources[r]+sprite.value, game.resources_limits[r])    
     
 def changeResource(sprite, partner, game, resource, value=1):
-    if resource not in sprite.resources_limits:
-        # TODO: not very satisfying default behavior...
-        sprite.resources_limits[resource] = abs(value)
-        sprite.resources_colors[resource] = partner.color
-    sprite.resources[resource] = min(sprite.resources[resource]+value, sprite.resources_limits[resource])    
-    
+    """ Increments a specific resource type in sprite """
+    sprite.resources[resource] = min(sprite.resources[resource]+value, game.resources_limits[resource])
 
 def killIfHasMore(sprite, partner, game, resource, limit=1):
     """ If 'sprite' has more than a limit of the resource type given, it dies. """

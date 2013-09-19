@@ -22,7 +22,7 @@ caster_game = """
 BasicGame 
     SpriteSet    
         goal   > Immovable color=GREEN
-        mana   > Resource color=LIGHTBLUE res_limit=3
+        mana   > Resource color=LIGHTBLUE limit=3
         bullet > Missile color=RED singleton=True
         fire   > Spreader color=ORANGE spreadprob=0.25
         avatar > ShootAvatar ammo=mana stype=bullet

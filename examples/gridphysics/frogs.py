@@ -28,8 +28,9 @@ BasicGame
         structure > Immovable
             water > color=BLUE
             goal  > color=GREEN
-        log    > Missile    orientation=LEFT  speed=0.1 color=BROWN
-        truck  > Missile    orientation=RIGHT 
+        log    > Missile   orientation=LEFT  speed=0.1 color=BROWN
+        safety > Resource  limit=2 color=BROWN
+        truck  > Missile   orientation=RIGHT 
             fasttruck  > speed=0.2  color=ORANGE
             slowtruck  > speed=0.1  color=RED
         # defining 'wall' last, makes the walls show on top of all other sprites
@@ -37,11 +38,11 @@ BasicGame
         
     InteractionSet
         goal avatar  > killSprite
-        avatar log   > changeResource resource=log value=2
+        avatar log   > changeResource resource=safety value=2
         avatar log   > pullWithIt   # note how one collision can have multiple effects
         avatar wall  > stepBack
-        avatar water > killIfHasLess resource=log limit=0
-        avatar water > changeResource resource=log value=-1
+        avatar water > killIfHasLess  resource=safety limit=0
+        avatar water > changeResource resource=safety value=-1
         avatar truck > killSprite
         log    EOS   > killSprite
         truck  EOS   > wrapAround
