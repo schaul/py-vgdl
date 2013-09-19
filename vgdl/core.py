@@ -156,7 +156,7 @@ class BasicGame(object):
     load_save_enabled = True
     
     def __init__(self, **kwargs):
-        from ontology import Immovable, DARKGRAY, MovingAvatar
+        from ontology import Immovable, DARKGRAY, MovingAvatar, GOLD
         for name, value in kwargs.items():
             if hasattr(self, name):
                 self.__dict__[name] = value
@@ -181,6 +181,10 @@ class BasicGame(object):
         self.char_mapping = {}
         # termination criteria
         self.terminations = [Termination()]
+        # resource properties
+        self.resources_limits = defaultdict(lambda: 2)
+        self.resources_colors = defaultdict(lambda: GOLD)
+        
         self.is_stochastic = False
         self._lastsaved = None
         self.reset()
@@ -204,6 +208,16 @@ class BasicGame(object):
         self.block_size = max(2,int(800./max(self.width, self.height)))
         self.screensize = (self.width*self.block_size, self.height*self.block_size)
         
+        # set up resources
+        for res_type, (sclass, args, _) in self.sprite_constr.items():
+            if issubclass(sclass, Resource):
+                if 'res_type' in args:
+                    res_type = args['res_type']
+                if 'color' in args:
+                    self.resources_colors[res_type] = args['color']
+                if 'limit' in args:
+                    self.resources_limits[res_type] = args['limit']
+                            
         # create sprites
         for row, l in enumerate(lines):
             for col, c in enumerate(l):
@@ -312,12 +326,10 @@ class BasicGame(object):
         e.g. for the load/save functionality. """
         # TODO: make sure this list is complete/correct -- maybe a naming convention would be easier,
         # if it distinguished in-game-mutable form immutable attributes!
-        ignoredattributes = ['resources_colors',
-                             'stypes',
+        ignoredattributes = ['stypes',
                              'name',
                              'lastmove',
                              'color',
-                             'resources_limits',
                              'lastrect',
                              'resources', 
                              'physicstype', 
@@ -390,7 +402,7 @@ class BasicGame(object):
     
     def _drawAll(self):
         for s in self:
-            s._draw(self.screen)
+            s._draw(self)
             
     def _updateCollisionDict(self):
         # create a dictionary that maps type pairs to a list of sprite pairs
@@ -600,8 +612,6 @@ class VGDLSprite(object):
     
         # management of resources contained in the sprite
         self.resources = defaultdict(lambda: 0)
-        self.resources_limits = {}
-        self.resources_colors = {}
         
     def update(self, game):
         """ The main place where subclasses differ. """
@@ -629,8 +639,9 @@ class VGDLSprite(object):
     def lastdirection(self):
         return (self.rect[0]-self.lastrect[0], self.rect[1]-self.lastrect[1])     
     
-    def _draw(self, screen):
+    def _draw(self, game):
         from ontology import LIGHTGREEN
+        screen = game.screen
         if self.shrinkfactor != 0:
             shrunk = self.rect.inflate(-self.rect.width*self.shrinkfactor, 
                                        -self.rect.height*self.shrinkfactor)
@@ -649,23 +660,21 @@ class VGDLSprite(object):
         else:
             r = screen.fill(self.color, shrunk)
         if len(self.resources) > 0:
-            self._drawResources(screen, shrunk)
+            self._drawResources(game, screen, shrunk)
         VGDLSprite.dirtyrects.append(r) 
         
-    def _drawResources(self, screen, rect):
+    def _drawResources(self, game, screen, rect):
         """ Draw progress bars on the bottom third of the sprite """
         from ontology import BLACK
         tot = len(self.resources)
         barheight = rect.height/3.5/tot
         offset = rect.top+2*rect.height/3.
         for r in sorted(self.resources.keys()):
-            if not r in self.resources_limits:
-                continue
             wiggle = rect.width/10.
-            prop = max(0,min(1,self.resources[r] / float(self.resources_limits[r])))
+            prop = max(0,min(1,self.resources[r] / float(game.resources_limits[r])))
             filled = pygame.Rect(rect.left+wiggle/2, offset, prop*(rect.width-wiggle), barheight)
             rest   = pygame.Rect(rect.left+wiggle/2+prop*(rect.width-wiggle), offset, (1-prop)*(rect.width-wiggle), barheight)
-            screen.fill(self.resources_colors[r], filled)
+            screen.fill(game.resources_colors[r], filled)
             screen.fill(BLACK, rest)
             offset += barheight            
         
@@ -686,7 +695,21 @@ class Avatar(object):
     
     def __init__(self):
         self.actions = self.declare_possible_actions()
-   
+
+class Resource(VGDLSprite):
+    """ A special type of object that can be present in the game in two forms, either
+    physically sitting around, or in the form of a counter inside another sprite. """
+    value=1
+    limit=2
+    res_type = None
+    
+    @property
+    def resourceType(self):
+        if self.res_type is None:
+            return self.name
+        else:
+            return self.res_type
+
 class Termination(object):
     """ Base class for all termination criteria. """
     def isDone(self, game):
