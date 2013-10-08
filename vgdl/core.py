@@ -420,14 +420,15 @@ class BasicGame(object):
         self.lastcollisions = defaultdict(list)
         nonstatics = [s for s in self if not s.is_static]
         statics = [s for s in self if s.is_static]
+        allsprites = nonstatics+statics
+        
         for i, s1 in enumerate(nonstatics):
-            for s2 in (nonstatics+statics)[i+1:]:
-                assert s1 != s2
-                if s1.rect.colliderect(s2.rect):
-                    for key1 in s1.stypes:
-                        for key2 in s2.stypes:
-                            self.lastcollisions[(key1, key2)].append((s1, s2))
-                            self.lastcollisions[(key2, key1)].append((s2, s1))
+            for ci in s1.rect.collidelistall(allsprites[i+1:]):
+                s2 = allsprites[i+1+ci]
+                for key1 in s1.stypes:
+                    for key2 in s2.stypes:
+                        self.lastcollisions[(key1, key2)].append((s1, s2))
+                        self.lastcollisions[(key2, key1)].append((s2, s1))
             # detect end-of-screen
             if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
                 for key1 in s1.stypes:
@@ -663,7 +664,7 @@ class VGDLSprite(object):
             r = self.rect.copy()
         else:
             r = screen.fill(self.color, shrunk)
-        if self.resources > 0:
+        if self.resources:
             self._drawResources(game, screen, shrunk)
         VGDLSprite.dirtyrects.append(r) 
         
