@@ -44,9 +44,6 @@ BASEDIRS = [UP, LEFT, DOWN, RIGHT]
 class GridPhysics():
     """ Define actions and key-mappings for grid-world dynamics. """
     
-    def __init__(self, gridsize=(10, 10)):
-        self.gridsize = gridsize        
-                
     def passiveMovement(self, sprite):
         if sprite.speed is None:
             speed = 1

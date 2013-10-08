@@ -44,8 +44,7 @@ class GameEnvironment(Environment, StateObsHandler):
         self.reset()                
     
     def reset(self):
-        if self.visualize:
-            self._game._initScreen(self._game.screensize)
+        self._game._initScreen(self._game.screensize, not self.visualize)
         self.setState(self._initstate)
         # if no avatar starting location is specified, the default one will be to place it randomly
         self._game.randomizeAvatar()    
@@ -55,7 +54,8 @@ class GameEnvironment(Environment, StateObsHandler):
             pygame.display.flip()    
         if self.recordingEnabled:
             self._last_state = self.getState()
-            self._allEvents = []              
+            self._allEvents = []            
+        self._game.keystate = pygame.key.get_pressed()  
             
     def getSensors(self, state=None):
         if state is None:

@@ -157,7 +157,7 @@ class BasicGame(object):
     
     def __init__(self, **kwargs):
         from ontology import Immovable, DARKGRAY, MovingAvatar, GOLD
-        for name, value in kwargs.items():
+        for name, value in kwargs.iteritems():
             if hasattr(self, name):
                 self.__dict__[name] = value
             else:
@@ -209,7 +209,7 @@ class BasicGame(object):
         self.screensize = (self.width*self.block_size, self.height*self.block_size)
         
         # set up resources
-        for res_type, (sclass, args, _) in self.sprite_constr.items():
+        for res_type, (sclass, args, _) in self.sprite_constr.iteritems():
             if issubclass(sclass, Resource):
                 if 'res_type' in args:
                     res_type = args['res_type']
@@ -279,6 +279,15 @@ class BasicGame(object):
                 self.is_stochastic = True
             res.append(s)
         return res
+
+    def _createSprite_cheap(self, key, pos):
+        """ The same, but without the checks, which speeds things up during load/saving"""
+        sclass, args, stypes = self.sprite_constr[key]
+        s = sclass(pos=pos, size=(self.block_size, self.block_size), name=key, **args)
+        s.stypes = stypes
+        self.sprite_groups[key].append(s)
+        self.num_sprites += 1
+        return s
             
     def _initScreen(self, size,headless):
         if(headless):
@@ -321,12 +330,7 @@ class BasicGame(object):
         """ The currently alive avatar(s) """
         return [s for s in self if isinstance(s, Avatar) and s not in self.kill_list]
     
-    def getFullState(self):
-        """ Return a dictionary that allows full reconstruction of the game state,
-        e.g. for the load/save functionality. """
-        # TODO: make sure this list is complete/correct -- maybe a naming convention would be easier,
-        # if it distinguished in-game-mutable form immutable attributes!
-        ignoredattributes = ['stypes',
+    ignoredattributes = ['stypes',
                              'name',
                              'lastmove',
                              'color',
@@ -352,6 +356,13 @@ class BasicGame(object):
                              'airsteering',
                              'strength',
                              ]
+    
+    def getFullState(self):
+        """ Return a dictionary that allows full reconstruction of the game state,
+        e.g. for the load/save functionality. """
+        # TODO: make sure this list is complete/correct -- maybe a naming convention would be easier,
+        # if it distinguished in-game-mutable form immutable attributes!
+        ias = self.ignoredattributes
         obs = {}
         for key in self.sprite_groups:
             ss = {}
@@ -363,13 +374,12 @@ class BasicGame(object):
                     # two objects of the same type in the same location, we need to disambiguate
                     pos = (pos, None)
                 ss[pos] = attrs
-                for a, val in s.__dict__.items():
-                    if a not in ignoredattributes:
+                for a, val in s.__dict__.iteritems():
+                    if a not in ias:
                         attrs[a] = val
-                if len(s.resources) > 0:
+                if s.resources:
                     attrs['resources'] = dict(s.resources)
                     
-        
         fs = {'score': self.score,
               'ended': self.ended,
               'objects': obs}
@@ -380,13 +390,13 @@ class BasicGame(object):
         self.reset()
         self.score = fs['score']
         self.ended = fs['ended']
-        for key, ss in fs['objects'].items():
+        for key, ss in fs['objects'].iteritems():
             self.sprite_groups[key] = []
-            for pos, attrs in ss.items():
-                s = self._createSprite([key], pos)[0]
-                for a, val in attrs.items():
+            for pos, attrs in ss.iteritems():
+                s = self._createSprite_cheap(key, pos)
+                for a, val in attrs.iteritems():
                     if a == 'resources':
-                        for r, v in val.items():
+                        for r, v in val.iteritems():
                             s.resources[r] = v  
                     else:
                         s.__setattr__(a, val)  
@@ -587,26 +597,19 @@ class VGDLSprite(object):
     shrinkfactor=0
         
     def __init__(self, pos, size=(10,10), color=None, speed=None, cooldown=None, physicstype=None, **kwargs):
+        from ontology import GridPhysics
         self.rect = pygame.Rect(pos, size)
         self.lastrect = self.rect
-        if physicstype is not None:
-            self.physicstype = physicstype            
-        elif self.physicstype is None:
-            from ontology import GridPhysics
-            self.physicstype = GridPhysics
-        self.physics = self.physicstype(size)
-        if speed is not None:
-            self.speed = speed
-        if cooldown is not None:
-            self.cooldown = cooldown
-        if color:
-            self.color = color
-        elif self.color is None:
-            self.color = (choice(self.COLOR_DISC), choice(self.COLOR_DISC), choice(self.COLOR_DISC))
-        for name, value in kwargs.items():
-            if hasattr(self, name):
+        self.physicstype = physicstype or self.physicstype or GridPhysics
+        self.physics = self.physicstype()
+        self.physics.gridsize = size
+        self.speed = speed or self.speed
+        self.cooldown = cooldown or self.cooldown
+        self.color =color or self.color or (choice(self.COLOR_DISC), choice(self.COLOR_DISC), choice(self.COLOR_DISC))
+        for name, value in kwargs.iteritems():
+            try:
                 self.__dict__[name] = value
-            else:
+            except:
                 print "WARNING: undefined parameter '%s' for sprite '%s'! "%(name, self.__class__.__name__)
         # how many timesteps ago was the last move?
         self.lastmove = 0        
@@ -660,7 +663,7 @@ class VGDLSprite(object):
             r = self.rect.copy()
         else:
             r = screen.fill(self.color, shrunk)
-        if len(self.resources) > 0:
+        if self.resources > 0:
             self._drawResources(game, screen, shrunk)
         VGDLSprite.dirtyrects.append(r) 
         
