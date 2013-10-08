@@ -357,7 +357,7 @@ class BasicGame(object):
                              'strength',
                              ]
     
-    def getFullState(self):
+    def getFullState(self,as_string = False):
         """ Return a dictionary that allows full reconstruction of the game state,
         e.g. for the load/save functionality. """
         # TODO: make sure this list is complete/correct -- maybe a naming convention would be easier,
@@ -373,7 +373,10 @@ class BasicGame(object):
                 while pos in ss:
                     # two objects of the same type in the same location, we need to disambiguate
                     pos = (pos, None)
-                ss[pos] = attrs
+                if(as_string):
+                    ss[str(pos)] = attrs
+                else:
+                    ss[pos] = attrs
                 for a, val in s.__dict__.iteritems():
                     if a not in ias:
                         attrs[a] = val
@@ -385,7 +388,7 @@ class BasicGame(object):
               'objects': obs}
         return fs
         
-    def setFullState(self, fs):
+    def setFullState(self, fs,as_string = False):
         """ Reset the game to be exactly as defined in the fullstate dict. """
         self.reset()
         self.score = fs['score']
@@ -393,6 +396,11 @@ class BasicGame(object):
         for key, ss in fs['objects'].iteritems():
             self.sprite_groups[key] = []
             for pos, attrs in ss.iteritems():
+                if as_string:
+                    p = eval(pos)
+
+                else:
+                    p = pos
                 s = self._createSprite_cheap(key, pos)
                 for a, val in attrs.iteritems():
                     if a == 'resources':
@@ -529,47 +537,47 @@ class BasicGame(object):
                 
         
     def tick(self,action,headless, persist_movie):
-        
+
         win = False
-        
-        self.clock.tick(self.frame_rate) 
+
+        #self.clock.tick(self.frame_rate)
         self.time += 1
-        self._clearAll()            
-            
+        self._clearAll()
+
             # gather events
         pygame.event.pump()
         self.keystate = list(pygame.key.get_pressed())
-        
+
         self.keystate[action] = 1
-            
+
             # load/save handling
-        if self.load_save_enabled:
-                from pygame.locals import K_1, K_2        
-                if self.keystate[K_2] and self._lastsaved is not None:
-                    self.setFullState(self._lastsaved)
-                    self._initScreen(self.screensize,headless)
-                    pygame.display.flip()
-                if self.keystate[K_1]:
-                    self._lastsaved = self.getFullState()    
-                    
+        #if self.load_save_enabled:
+        #        from pygame.locals import K_1, K_2
+        #        if self.keystate[K_2] and self._lastsaved is not None:
+        #            self.setFullState(self._lastsaved)
+        #            self._initScreen(self.screensize,headless)
+        #            pygame.display.flip()
+        #        if self.keystate[K_1]:
+        #            self._lastsaved = self.getFullState()
+
             # termination criteria
         for t in self.terminations:
                 self.ended, win = t.isDone(self)
                 if self.ended:
-                    return win, self.score      
-            # update sprites 
+                    return win, self.score
+            # update sprites
         #print action
-        
+
         for s in self:
-                s.update(self)                
+                s.update(self)
             # handle collision effects
         self._updateCollisionDict()
         self._eventHandling()
-        self._drawAll()                            
+        self._drawAll()
         pygame.display.update(VGDLSprite.dirtyrects)
-            
+
             #if(headless):
-             
+
         VGDLSprite.dirtyrects = []
         
         return None, None
