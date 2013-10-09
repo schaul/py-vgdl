@@ -21,9 +21,8 @@ push_game = """
 BasicGame frame_rate=30
     SpriteSet        
         hole   > Immovable color=DARKBLUE
-        movable >
-            avatar > MovingAvatar cooldown=4
-            box    > Passive                
+        avatar > MovingAvatar #cooldown=4
+        box    > Passive                
     LevelMapping
         0 > hole
         1 > box            

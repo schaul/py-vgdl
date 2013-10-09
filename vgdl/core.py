@@ -426,42 +426,62 @@ class BasicGame(object):
     def _drawAll(self):
         for s in self:
             s._draw(self)
-            
-    def _updateCollisionDict(self, changedsprite=None):
-        # create a dictionary that maps type pairs to a list of sprite pairs
-        lastcollisions = defaultdict(list)
-        allsprites = []
-        nonstatics = []
-        for _, v in self.sprite_groups.iteritems():
-            allsprites.extend(v)
-            # CHECKME: assumes that if one is static, all are static.
-            if v and not v[0].is_static:
-                nonstatics.extend(v)
-        
-        for i, s1 in enumerate(nonstatics):
-            for ci in s1.rect.collidelistall(allsprites[i+1:]):
-                s2 = allsprites[i+1+ci]
-                for key1 in s1.stypes:
-                    for key2 in s2.stypes:
-                        lastcollisions[(key1, key2)].append((s1, s2))
-                        lastcollisions[(key2, key1)].append((s2, s1))
-            # detect end-of-screen
-            if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
-                for key1 in s1.stypes:
-                    lastcollisions[(key1, 'EOS')].append((s1, None))
-        self.lastcollisions = lastcollisions
+                    
+    def _updateCollisionDict(self, changedsprite):
+        for key in changedsprite.stypes:
+            if key in self.lastcollisions:
+                del self.lastcollisions[key]
                     
     def _eventHandling(self):
-        self._updateCollisionDict()
+        self.lastcollisions = {}
+        ss = self.lastcollisions
         for g1, g2, effect, kwargs in self.collision_eff:
-            for s1, s2 in set(self.lastcollisions[(g1, g2)]):
-                # TODO: this is not a bullet-proof way, but seems to work
-                if s1 not in self.kill_list:
-                    if 'scoreChange' in kwargs:
-                        self.score += kwargs['scoreChange']
-                        kwargs = kwargs.copy()
-                        del kwargs['scoreChange']
-                    effect(s1, s2, self, **kwargs)
+            # build the current sprite lists (if not yet available)
+            for g in [g1, g2]:
+                if g not in ss:
+                    if g in self.sprite_groups:
+                        tmp = self.sprite_groups[g]
+                    else:
+                        tmp = []
+                        for key in self.sprite_groups:
+                            v = self.sprite_groups[key]
+                            if v and g in v[0].stypes:
+                                tmp.extend(v)
+                    ss[g] = (tmp, len(tmp))
+            
+            # iterate over the shorter one 
+            ss1, l1 = ss[g1]
+            ss2, l2 = ss[g2]
+            if l1 < l2:
+                shortss, longss, switch = ss1, ss2, False
+            else:
+                shortss, longss, switch = ss2, ss1, True
+            
+            # score argument is not passed along to the effect function
+            score = 0
+            if 'scoreChange' in kwargs:
+                kwargs = kwargs.copy()
+                score = kwargs['scoreChange']
+                del kwargs['scoreChange']
+            
+            # do collision detection
+            for s1 in shortss:
+                for ci in s1.rect.collidelistall(longss):
+                    s2 = longss[ci]
+                    if s1 == s2:
+                        continue
+                    # deal with the collision effects
+                    if score:
+                        self.score += score
+                    if switch:
+                        # CHECKME: this is not a bullet-proof way, but seems to work
+                        if s2 not in self.kill_list:
+                            effect(s2, s1, self, **kwargs)
+                    else:
+                        # CHECKME: this is not a bullet-proof way, but seems to work
+                        if s1 not in self.kill_list:
+                            effect(s1, s2, self, **kwargs)
+                                            
                                             
     def startGame(self, headless, persist_movie):        
         self._initScreen(self.screensize,headless)
@@ -545,15 +565,16 @@ class BasicGame(object):
         self.video_tmpl = '{tmp_dir}%09d-{name}-{g_id}.png'.format(self.time,tmp_dir = self.tmp_dir, name="VGDL-GAME", g_id=self.uiud)
                 
         
-    def tick(self,action,headless, persist_movie):
+    def tick(self,action,headless=True, persist_movie=False):
 
         win = False
 
         #self.clock.tick(self.frame_rate)
         self.time += 1
-        self._clearAll()
+        if not headless:
+            self._clearAll()
 
-            # gather events
+        # gather events
         pygame.event.pump()
         self.keystate = list(pygame.key.get_pressed())
 
@@ -578,15 +599,14 @@ class BasicGame(object):
         #print action
 
         for s in self:
-                s.update(self)
-            # handle collision effects
+            s.update(self)
+
+        # handle collision effects
         self._eventHandling()
-        self._drawAll()
-        pygame.display.update(VGDLSprite.dirtyrects)
-
-            #if(headless):
-
-        VGDLSprite.dirtyrects = []
+        if not headless:
+            self._drawAll()
+            pygame.display.update(VGDLSprite.dirtyrects)
+            VGDLSprite.dirtyrects = []
         
         return None, None
             
