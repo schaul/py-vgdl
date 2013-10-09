@@ -106,7 +106,6 @@ class GameEnvironment(Environment, StateObsHandler):
                 s.update(self._game)
         
         # handle collision effects                
-        self._game._updateCollisionDict()
         self._game._eventHandling()
         self._game._clearAll(self.visualize)
         

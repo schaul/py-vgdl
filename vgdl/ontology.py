@@ -658,7 +658,7 @@ def undoAll(sprite, partner, game):
 def bounceForward(sprite, partner, game):
     """ The partner sprite pushed, so if possible move in the opposite direction. """
     sprite.physics.activeMovement(sprite, unitVector(partner.lastdirection))
-    game._updateCollisionDict()
+    game._updateCollisionDict(sprite)
 
 def conveySprite(sprite, partner, game):
     """ Moves the partner in target direction by some step size. """
@@ -666,7 +666,7 @@ def conveySprite(sprite, partner, game):
     v = unitVector(partner.orientation)
     sprite.physics.activeMovement(sprite, v, speed=partner.strength)
     sprite.lastrect = tmp
-    game._updateCollisionDict()
+    game._updateCollisionDict(sprite)
     
 def windGust(sprite, partner, game):
     """ Moves the partner in target direction by some step size, but stochastically
@@ -677,7 +677,7 @@ def windGust(sprite, partner, game):
         v = unitVector(partner.orientation)
         sprite.physics.activeMovement(sprite, v, speed=s)
         sprite.lastrect = tmp
-        game._updateCollisionDict()
+        game._updateCollisionDict(sprite)
         
 def slipForward(sprite, partner, game, prob=0.5):
     """ Slip forward in the direction of the current orientation, sometimes."""
@@ -686,7 +686,7 @@ def slipForward(sprite, partner, game, prob=0.5):
         v = unitVector(sprite.orientation)
         sprite.physics.activeMovement(sprite, v, speed=1)
         sprite.lastrect = tmp
-        game._updateCollisionDict()
+        game._updateCollisionDict(sprite)
         
 def attractGaze(sprite, partner, game, prob=0.5):
     """ Turn the orientation to the value given by the partner. """
@@ -700,7 +700,7 @@ def turnAround(sprite, partner, game):
     sprite.lastmove = sprite.cooldown
     sprite.physics.activeMovement(sprite, DOWN)
     reverseDirection(sprite, partner, game)
-    game._updateCollisionDict()
+    game._updateCollisionDict(sprite)
     
 def reverseDirection(sprite, partner, game):
     sprite.orientation = (-sprite.orientation[0], -sprite.orientation[1])

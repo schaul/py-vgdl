@@ -304,7 +304,7 @@ class BasicGame(object):
             self.screen.blit(self.background, (0,0))        
         
     def __iter__(self):
-        """ Iterator over all sprites """
+        """ Iterator over all sprites (ordered) """
         for key in self.sprite_order:
             if key not in self.sprite_groups:
                 # abstract type
@@ -328,7 +328,11 @@ class BasicGame(object):
         
     def getAvatars(self):
         """ The currently alive avatar(s) """
-        return [s for s in self if isinstance(s, Avatar) and s not in self.kill_list]
+        res = []
+        for ss in self.sprite_groups.values():
+            if ss and isinstance(ss[0], Avatar):
+                res.extend([s for s in ss if s not in self.kill_list])
+        return res
     
     ignoredattributes = ['stypes',
                              'name',
@@ -423,26 +427,32 @@ class BasicGame(object):
         for s in self:
             s._draw(self)
             
-    def _updateCollisionDict(self):
+    def _updateCollisionDict(self, changedsprite=None):
         # create a dictionary that maps type pairs to a list of sprite pairs
-        self.lastcollisions = defaultdict(list)
-        nonstatics = [s for s in self if not s.is_static]
-        statics = [s for s in self if s.is_static]
-        allsprites = nonstatics+statics
+        lastcollisions = defaultdict(list)
+        allsprites = []
+        nonstatics = []
+        for _, v in self.sprite_groups.iteritems():
+            allsprites.extend(v)
+            # CHECKME: assumes that if one is static, all are static.
+            if v and not v[0].is_static:
+                nonstatics.extend(v)
         
         for i, s1 in enumerate(nonstatics):
             for ci in s1.rect.collidelistall(allsprites[i+1:]):
                 s2 = allsprites[i+1+ci]
                 for key1 in s1.stypes:
                     for key2 in s2.stypes:
-                        self.lastcollisions[(key1, key2)].append((s1, s2))
-                        self.lastcollisions[(key2, key1)].append((s2, s1))
+                        lastcollisions[(key1, key2)].append((s1, s2))
+                        lastcollisions[(key2, key1)].append((s2, s1))
             # detect end-of-screen
             if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
                 for key1 in s1.stypes:
-                    self.lastcollisions[(key1, 'EOS')].append((s1, None))
+                    lastcollisions[(key1, 'EOS')].append((s1, None))
+        self.lastcollisions = lastcollisions
                     
     def _eventHandling(self):
+        self._updateCollisionDict()
         for g1, g2, effect, kwargs in self.collision_eff:
             for s1, s2 in set(self.lastcollisions[(g1, g2)]):
                 # TODO: this is not a bullet-proof way, but seems to work
@@ -489,7 +499,6 @@ class BasicGame(object):
             for s in self:
                 s.update(self)                
             # handle collision effects
-            self._updateCollisionDict()
             self._eventHandling()
             self._drawAll()                            
             pygame.display.update(VGDLSprite.dirtyrects)
@@ -571,7 +580,6 @@ class BasicGame(object):
         for s in self:
                 s.update(self)
             # handle collision effects
-        self._updateCollisionDict()
         self._eventHandling()
         self._drawAll()
         pygame.display.update(VGDLSprite.dirtyrects)
