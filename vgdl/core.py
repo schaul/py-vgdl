@@ -449,6 +449,14 @@ class BasicGame(object):
                                 tmp.extend(v)
                     ss[g] = (tmp, len(tmp))
             
+            # special case for end-of-screen
+            if g2 == "EOS":
+                ss1, l1 = ss[g1]
+                for s1 in ss1:
+                    if not pygame.Rect((0,0), self.screensize).contains(s1.rect):
+                        effect(s1, None, self, **kwargs)
+                continue
+            
             # iterate over the shorter one 
             ss1, l1 = ss[g1]
             ss2, l2 = ss[g2]
