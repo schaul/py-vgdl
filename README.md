@@ -9,9 +9,9 @@ Programmers extend the possibilities of (1) by writing modules in (2), and game 
 
 References
 ----------
-The original idea was discussed in the 2012 Dagstuhl seminar [pdf](http://drops.dagstuhl.de/opus/volltexte/2013/4338/pdf/9.pdf),
-with a full description presented at the IEEE CIG conference 2013 [pdf](http://www.idsia.ch/~tom/publications/pyvgdl.pdf).
-
+The original idea was [discussed in the 2012 Dagstuhl seminar](http://drops.dagstuhl.de/opus/volltexte/2013/4338/pdf/9.pdf),
+with a [full description](http://www.idsia.ch/~tom/publications/pyvgdl.pdf) presented at the IEEE CIG conference 2013 (this is also
+the reference paper to [cite](http://www.idsia.ch/~tom/bibtex/pyvgdl.bib) if you use PyVGDL for academic work).
  
 Installation and Dependencies
 -----------------------------
