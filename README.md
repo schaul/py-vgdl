@@ -5,6 +5,13 @@ PyVGDL is a high-level video game description language (VGDL) built on top of py
 
 The aim is to decompose game descriptions into two parts: 1) a very high-level description, close to human language, to specify the dynamics, which builds on 2) an ontology of preprogrammed concepts for dynamics, interactions, control.
 Programmers extend the possibilities of (1) by writing modules in (2), and game designers can very quickly compose new games from those components without programming.
+
+
+References
+----------
+The original idea was discussed in the 2012 Dagstuhl seminar [pdf](http://drops.dagstuhl.de/opus/volltexte/2013/4338/pdf/9.pdf),
+with a full description presented at the IEEE CIG conference 2013 [pdf](http://www.idsia.ch/~tom/publications/pyvgdl.pdf).
+
  
 Installation and Dependencies
 -----------------------------
