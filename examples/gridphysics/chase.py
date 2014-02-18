@@ -9,27 +9,27 @@ Careful: goats get angry when you see a dead goat...
 
 chase_game = """
 BasicGame
-    SpriteSet    
-        carcass > Immovable color=BROWN 
+    SpriteSet
+        carcass > Immovable color=BROWN
         goat > stype=avatar cooldown=3
             angry  > Chaser  color=ORANGE
             scared > Fleeing color=BLUE
-                    
+
     InteractionSet
-        scared avatar  > transformTo stype=carcass 
-        scared carcass > transformTo stype=angry
-        carcass scared > killSprite
+        goat   wall    > stepBack
+        avatar wall    > stepBack
         avatar  angry  > killSprite
-        goat   wall    > stepBack        
-        avatar wall    > stepBack        
-        
+        carcass scared > killSprite
+        scared avatar  > transformTo stype=carcass
+        scared carcass > transformTo stype=angry
+
     LevelMapping
         0 > scared
-        
+
     TerminationSet
-        SpriteCounter stype=scared win=True     
-        SpriteCounter stype=avatar win=False     
-    
+        SpriteCounter stype=scared win=True
+        SpriteCounter stype=avatar win=False
+
 """
 
 chase_level = """
@@ -48,4 +48,4 @@ wwwwwwwwwwwwwwwwwwwwwwww
 
 if __name__ == "__main__":
     from vgdl.core import VGDLParser
-    VGDLParser.playGame(chase_game, chase_level)    
+    VGDLParser.playGame(chase_game, chase_level)
