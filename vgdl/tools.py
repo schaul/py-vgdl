@@ -8,6 +8,12 @@ from math import sqrt
 import pygame
 
 
+def logToFile(string):
+    f = open("log.txt", "a")
+    f.write(string +"\n")
+    f.close()
+    pass
+
 def vectNorm(v):
     return sqrt(float(v[0])**2+v[1]**2)
 
