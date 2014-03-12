@@ -17,6 +17,11 @@ Installation and Dependencies
 -----------------------------
 
 *  Get the [pygame](http://www.pygame.org/download.shtml) package
+* (Alternative Method) Using Homebrew and virtualenv on Mac OSX
+
+            brew install sdl sdl_image sdl_mixer sdl_ttf portmidi
+            pip install mercurial
+            pip install hg+http://bitbucket.org/pygame/pygame
 
 *  For all reinforcement learning usage, also get the [PyBrain](http://www.pybrain.org) machine learning library
 
