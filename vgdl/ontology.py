@@ -8,6 +8,7 @@ from random import choice, random
 from math import sqrt
 import pygame
 from tools import triPoints, unitVector, vectNorm, oncePerStep
+from ai import AStarWorld
 
 # ---------------------------------------------------------------------
 #     Constants
@@ -315,6 +316,94 @@ class Fleeing(Chaser):
     """ Just reversing directions"""
     fleeing = True
 
+class AStarChaser(RandomNPC):
+    """ Move towards the character using A* search. """
+    stype = None
+    fleeing = False
+    drawpath = None
+    walkableTiles = None
+    neighborNodes = None
+    
+    def _movesToward(self, game, target):
+        """ Find the canonical direction(s) which move toward
+            the target. """
+        res = []
+        basedist = self.physics.distance(self.rect, target.rect)
+        for a in BASEDIRS:
+            r = self.rect.copy()
+            r = r.move(a)
+            newdist = self.physics.distance(r, target.rect)
+            if self.fleeing and basedist < newdist:
+                res.append(a)
+            if not self.fleeing and basedist > newdist:
+                res.append(a)
+        return res
+
+    def _draw(self, game):
+        """ With a triangle that shows the orientation. """
+        RandomNPC._draw(self, game)
+        
+        if self.walkableTiles:
+            col = pygame.Color(0, 0, 255, 100)
+            for sprite in self.walkableTiles:
+                pygame.draw.rect(game.screen, col, sprite.rect)
+        
+        if self.neighborNodes:
+            #logToFile("len(neighborNodes)=%s" %len(self.neighborNodes))
+            col = pygame.Color(0, 255, 255, 80)
+            for node in self.neighborNodes:
+                pygame.draw.rect(game.screen, col, node.sprite.rect)
+    
+        if self.drawpath:
+            col = pygame.Color(0, 255, 0, 120)
+            for sprite in self.drawpath[1:-1]:
+                pygame.draw.rect(game.screen, col, sprite.rect)
+
+    def _setDebugVariables(self, world, path):
+        '''
+            Sets the variables required for debug drawing of the paths
+            resulting from the A-Star search.
+            '''
+        
+        path_sprites = [node.sprite for node in path]
+        
+        self.walkableTiles = world.get_walkable_tiles()
+        self.neighborNodes = world.neighbor_nodes_of_sprite(self)
+        self.drawpath = path_sprites
+    
+    def update(self, game):
+        VGDLSprite.update(self, game)
+        
+        world = AStarWorld(game)
+        path = world.getMoveFor(self)
+        
+        # Uncomment below to draw debug paths.
+        # self._setDebugVariables(world,path)
+        
+        if len(path)>1:
+            move = path[1]
+            
+            nextX, nextY = world.get_sprite_tile_position(move.sprite)
+            nowX, nowY = world.get_sprite_tile_position(self)
+            
+            movement = None
+            
+            if nowX == nextX:
+                if nextY > nowY:
+                    #logToFile('DOWN')
+                    movement = DOWN
+                else:
+                    #logToFile('UP')
+                    movement = UP
+            else:
+                if nextX > nowX:
+                    #logToFile('RIGHT')
+                    movement = RIGHT
+                else:
+                    #logToFile('LEFT')
+                    movement = LEFT
+                    
+        self.physics.activeMovement(self, movement)
 
 
 # ---------------------------------------------------------------------
