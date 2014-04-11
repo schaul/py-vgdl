@@ -4,6 +4,13 @@ A few simple layouts for maze-like games: find the exit in the minimal amount of
 @author: Tom Schaul
 '''
 
+maze_level_0 = """
+wwww
+w Gw
+wA w
+wwww
+"""
+
 maze_level_1 = """
 wwwwww
 w   Gw
