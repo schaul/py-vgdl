@@ -3,8 +3,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-from distutils.extension import Extension
-
 libname="vgdl"
 setup(
 name = libname,
