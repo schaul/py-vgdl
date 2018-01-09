@@ -33,12 +33,13 @@ using pip on linux
 
 	sudo pip install git+git://github.com/schaul/py-vgdl.git
 
-using pip on windows
+using pip on windows or Max OSX
 
 	pip install git+git://github.com/schaul/py-vgdl.git
 	
 otherwise you can download it and install it using 
 
+	git clone git://github.com/schaul/py-vgdl.git
 	python setup.py install
  
 *  Try examples
