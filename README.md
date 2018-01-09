@@ -31,11 +31,11 @@ the reference paper to [cite](http://www.idsia.ch/~tom/bibtex/pyvgdl.bib) if you
 
 using pip on linux
 
-	sudo pip install git+git://github.com/martinResearch/py-vgdl.git
+	sudo pip install git+git://github.com/schaul/py-vgdl.git
 
 using pip on windows
 
-	pip install git+git://github.com/martinResearch/py-vgdl.git
+	pip install git+git://github.com/schaul/py-vgdl.git
 	
 otherwise you can download it and install it using 
 
