@@ -1,5 +1,4 @@
-PyVGDL
-=======
+# PyVGDL
 
 PyVGDL is a high-level video game description language (VGDL) built on top of pygame.
 
@@ -7,15 +6,16 @@ The aim is to decompose game descriptions into two parts: 1) a very high-level d
 Programmers extend the possibilities of (1) by writing modules in (2), and game designers can very quickly compose new games from those components without programming.
 
 
-References
-----------
+## References
+
 The original idea was [discussed in the 2012 Dagstuhl seminar](http://drops.dagstuhl.de/opus/volltexte/2013/4338/pdf/9.pdf),
 with a [full description](http://www.idsia.ch/~tom/publications/pyvgdl.pdf) presented at the IEEE CIG conference 2013 (this is also
 the reference paper to [cite](http://www.idsia.ch/~tom/bibtex/pyvgdl.bib) if you use PyVGDL for academic work).
  
-Installation and Dependencies
------------------------------
+## Installation and Dependencies
 
+
+### Dependencies
 *  Get the [pygame](http://www.pygame.org/download.shtml) package
 * (Alternative Method) Using Homebrew and virtualenv on Mac OSX
 
@@ -27,9 +27,20 @@ Installation and Dependencies
 
 *  For the upload to youtube functionality, you will need the [gdata](https://pypi.python.org/pypi/gdata) library
  
-*  Download repository 
+### Installation
 
-          git clone git://github.com/schaul/py-vgdl.git
+using pip on linux
+
+	sudo pip install git+git://github.com/schaul/py-vgdl.git
+
+using pip on windows or Max OSX
+
+	pip install git+git://github.com/schaul/py-vgdl.git
+	
+otherwise you can download it and install it using 
+
+	git clone git://github.com/schaul/py-vgdl.git
+	python setup.py install
  
 *  Try examples
 
@@ -37,8 +48,8 @@ Installation and Dependencies
           python -m examples.gridphysics.frogs
           python -m examples.gridphysics.zelda
 
-Features
---------
+## Features
+
 * Language
  * A simple programming language of 2D video game design
  * A parser for the language
