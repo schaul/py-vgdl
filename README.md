@@ -1,3 +1,11 @@
+## Update June 2019:
+
+[VGDL 2.0](https://github.com/rubenvereecken/py-vgdl) is a new and extended version of this project, developed and maintained independently by Ruben Vereecken, and recommended for anyone looking to start using VGDL today (this repository is effectively dormant).
+
+The other actively developed extension is [java-vgdl](https://github.com/GAIGResearch/GVGAI/wiki/VGDL-Language), which is used for the [GVG-AI competition](http://www.gvgai.net/).
+
+(original read-me below)
+
 # PyVGDL
 
 PyVGDL is a high-level video game description language (VGDL) built on top of pygame.
